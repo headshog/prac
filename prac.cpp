@@ -53,7 +53,7 @@ public:
         r.age = 0;
     }
     Man& operator= (Man&& r) noexcept {
-        if(this == &r) 
+        if(this == &r)
             return *this;
         delete[] name.get_s();
         name = r.name;
@@ -70,7 +70,7 @@ public:
         return *this;
     }
     char* get_man_name() {
-        return name.get_s(); 
+        return name.get_s();
     }
     Str get_name() {
         return name;

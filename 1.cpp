@@ -53,7 +53,7 @@ public:
         r.age = 0;
     }
     Man& operator= (Man&& r) noexcept {
-        if(this == &r) 
+        if(this == &r)
             return *this;
         delete[] name.get_s();
         name = r.name;
