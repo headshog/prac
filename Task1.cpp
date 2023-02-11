@@ -6,7 +6,7 @@ using namespace std;
 
 
 int main() {
-    string s = string(12, 'a');
+    string s = string(10, 'a');
     cout << s << endl;
     return 0;
 }
