@@ -32,11 +32,11 @@ public:
         AccAssign(B.AccNum, B.AccOwner, B.AccDate, B.AccSum, B.sizeowner, B.sizedate);
     }
     BankAccount& operator= (const BankAccount& B) {
-        if (this == &B)
-            return *this;
-        delete[] AccOwner;
-        delete[] AccDate;
-        AccAssign(B.AccNum, B.AccOwner, B.AccDate, B.AccSum, B.sizeowner, B.sizedate);
+        if (this != &B) {
+            delete[] AccOwner;
+            delete[] AccDate;
+            AccAssign(B.AccNum, B.AccOwner, B.AccDate, B.AccSum, B.sizeowner, B.sizedate);
+        }
         return *this;
     }
     ~BankAccount() {
@@ -62,12 +62,41 @@ private:
     };
     Node *Head, *Tail;
     size_t sz;
+    void copy_list(const List& L) {
+        Node *pr = nullptr, *now, *now_L = L.Head;
+        for(size_t i = 0; i < sz; i++) {
+            now = new Node;
+            now->Elem = now_L->Elem;
+            now->Prev = pr;
+            now->Next = nullptr;
+            if(i == 0)
+                Head = now;
+            else
+                pr->Next = now;
+            pr = now;
+            now_L = now_L->Next;
+        }
+        Tail = now;
+        sz = L.sz;
+    }
 public:
     List() : Head(nullptr), Tail(nullptr), sz(0) {}
+    List(const List& L) {
+        copy_list(L);
+    }
+    List& operator= (const List& L) {
+        if(this != &L) {
+            L.~List();
+            copy_list(L);
+        }
+        return *this;
+    }
     ~List() {
         Node* p = Head;
         while (p != nullptr) {
-            p->Elem.~BankAccount();
+            Node* q = p;
+            q->Elem.~BankAccount();
+            delete q;
             p = p->Next;
         }
     }
@@ -202,5 +231,5 @@ int main() {
     L.pop_front();
     L.pop_back();
     cout << L.empty() << endl;
-	return 0;
+    return 0;
 }
