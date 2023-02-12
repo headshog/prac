@@ -1,6 +1,7 @@
 #include <iostream>
 #include <algorithm>
 #include <cstdlib>
+#include <string.h>
 
 using namespace std;
 
@@ -15,8 +16,8 @@ private:
         if (!sizeda) sizeda = strlen(Date);
         AccOwner = new char[(sizeowner = sizeow) + 1];
         AccDate = new char[(sizedate = sizeda) + 1];
-        strcpy_s(AccOwner, sizeow + 1, Owner);
-        strcpy_s(AccDate, sizeda + 1, Date);
+        strcpy(AccOwner, Owner);
+        strcpy(AccDate, Date);
         AccNum = Num;
         AccSum = Sum;
     }
@@ -134,13 +135,13 @@ public:
         delete p;
         sz--;
     }
-    void insert(int pos, BankAccount x) {
+    void insert(size_t pos, BankAccount x) {
         if (pos >= sz || pos < 0) {
             cout << "No such position exists!\n";
             return;
         }
         Node* pr = Head;
-        for (int i = 0; i < pos; i++)
+        for (size_t i = 0; i < pos; i++)
             pr = pr->Next;
         if (pr->Next == nullptr) {
             push_back(x);
@@ -158,13 +159,13 @@ public:
         nx->Prev = p;
         sz++;
     }
-    void erase(int pos) {
+    void erase(size_t pos) {
         if (pos >= sz || pos < 0) {
             cout << "No such position exists!\n";
             return;
         }
         Node* p = Head;
-        for (int i = 0; i < pos; i++)
+        for (size_t i = 0; i < pos; i++)
             p = p->Next;
         if (p->Next == nullptr) {
             pop_back();
