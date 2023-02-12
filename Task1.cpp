@@ -223,13 +223,20 @@ int main() {
     Acc3 = BankAccount(2, "Woman", "01.01.01", 123456);
     List L;
     L.push_back(Acc3);
+    L.push_back(Acc3);
     L.push_front(Acc1);
     L.insert(0, Acc2);
+    L.insert(1, Acc2);
+    L.insert(2, Acc2);
+    L.insert(L.size() - 1, Acc1);    
     cout << L.size() << endl;
     L.print();
     L.erase(1);
+    L.erase(0);
+    L.erase(L.size() - 1);
     L.pop_front();
     L.pop_back();
+    L.print();
     cout << L.empty() << endl;
     return 0;
 }
