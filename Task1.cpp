@@ -102,9 +102,8 @@ public:
         Node* p = Head;
         while (p != nullptr) {
             Node* q = p;
-            q->Elem.~BankAccount();
-            delete q;
             p = p->Next;
+            delete q;
         }
     }
     BankAccount front() {
