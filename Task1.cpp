@@ -7,35 +7,41 @@ using namespace std;
 
 class BankAccount {
 private:
+    static int AccCnt;
     int AccNum, AccSum;
     size_t sizeowner, sizedate;
 	char* AccOwner;
 	char* AccDate;
-    void AccAssign(int Num, const char* Owner, const char* Date, int Sum, size_t sizeow = 0, size_t sizeda = 0) {
+    void AccAssign(const char* Owner, const char* Date, int Sum, bool Num = false, size_t sizeow = 0, size_t sizeda = 0) {
         if (!sizeow) sizeow = strlen(Owner);
         if (!sizeda) sizeda = strlen(Date);
         AccOwner = new char[(sizeowner = sizeow) + 1];
         AccDate = new char[(sizedate = sizeda) + 1];
         strcpy(AccOwner, Owner);
         strcpy(AccDate, Date);
-        AccNum = Num;
+        if(Num) {
+            AccCnt++;
+            AccNum = AccCnt;
+        }
+        else
+            AccNum = 0;
         AccSum = Sum;
     }
 public:
     BankAccount() {
-        AccAssign(0, "", "", 0);
+        AccAssign("", "", 0);
     }
-    BankAccount(int Num, const char* Owner, const char* Date, int Sum) {
-        AccAssign(Num, Owner, Date, Sum);
+    BankAccount(const char* Owner, const char* Date, int Sum) {
+        AccAssign(Owner, Date, Sum);
     }
     BankAccount(const BankAccount& B) {
-        AccAssign(B.AccNum, B.AccOwner, B.AccDate, B.AccSum, B.sizeowner, B.sizedate);
+        AccAssign(B.AccOwner, B.AccDate, B.AccSum, false, B.sizeowner, B.sizedate);
     }
     BankAccount& operator= (const BankAccount& B) {
         if (this != &B) {
             delete[] AccOwner;
             delete[] AccDate;
-            AccAssign(B.AccNum, B.AccOwner, B.AccDate, B.AccSum, B.sizeowner, B.sizedate);
+            AccAssign(B.AccOwner, B.AccDate, B.AccSum, true, B.sizeowner, B.sizedate);
         }
         return *this;
     }
@@ -53,6 +59,7 @@ public:
         cout << "Account Balance: " << AccSum << endl;
     }
 };
+int BankAccount::AccCnt(0);
 
 class List {
 private:
@@ -176,10 +183,6 @@ public:
             push_back(x);
             return;
         }
-        if (pr->Prev == nullptr) {
-            push_front(x);
-            return;
-        }
         Node* nx = pr->Next, * p = new Node;
         p->Elem = x;
         p->Prev = pr;
@@ -217,10 +220,9 @@ public:
 };
 
 int main() {
-    BankAccount Acc1(1, "Man", "12.12.12", 123456);
+    BankAccount Acc1("Man", "12.12.12", 123456);
     BankAccount Acc2 = Acc1;
-    BankAccount Acc3;
-    Acc3 = BankAccount(2, "Woman", "01.01.01", 123456);
+    BankAccount Acc3 = BankAccount("Woman", "01.01.01", 123456);
     List L;
     L.push_back(Acc3);
     L.push_back(Acc3);
