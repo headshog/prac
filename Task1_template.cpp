@@ -72,7 +72,7 @@ private:
     size_t sz;
     void copy_list(const List& L) {
         Node *pr = nullptr, *now, *now_L = L.Head;
-        for(size_t i = 0; i < sz; i++) {
+        for(size_t i = 0; i < L.sz; i++) {
             now = new Node;
             now->Elem = now_L->Elem;
             now->Prev = pr;
@@ -94,7 +94,7 @@ public:
     }
     List& operator= (const List& L) {
         if(this != &L) {
-            L.~List();
+            this->~List();
             copy_list(L);
         }
         return *this;
