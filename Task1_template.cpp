@@ -103,9 +103,8 @@ public:
         Node* p = Head;
         while (p != nullptr) {
             Node* q = p;
-            q->Elem.~Type();
-            delete q;
             p = p->Next;
+            delete q;
         }
     }
     Type front() {
