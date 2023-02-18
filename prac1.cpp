@@ -71,27 +71,27 @@ public:
 
 class Wolf: public BaseAnimal {
 public:
-    Wolf(int h_max = 0, int food_type = 0, const char* name = nullptr, int h = 0): BaseAnimal(h, h_max, food_type, name) {}
+    Wolf(int h_max = 0, int food_type = 0, int h = 0): BaseAnimal(h, h_max, food_type, "Wolf") {}
 };
 
 class Lion: public BaseAnimal {
 public:
-    Lion(int h_max = 0, int food_type = 0, const char* name = nullptr, int h = 0): BaseAnimal(h, h_max, food_type, name) {}
+    Lion(int h_max = 0, int food_type = 0, int h = 0): BaseAnimal(h, h_max, food_type, "Lion") {}
 };
 
 class Tiger: public BaseAnimal {
 public:
-    Tiger(int h_max = 0, int food_type = 0, const char* name = nullptr, int h = 0): BaseAnimal(h, h_max, food_type, name) {}
+    Tiger(int h_max = 0, int food_type = 0, int h = 0): BaseAnimal(h, h_max, food_type, "Tiger") {}
 };
 
 class Giraffe: public BaseAnimal {
 public:
-    Giraffe(int h_max = 0, int food_type = 0, const char* name = nullptr, int h = 0): BaseAnimal(h, h_max, food_type, name) {}
+    Giraffe(int h_max = 0, int h = 0): BaseAnimal(h, h_max, 2, "Giraffe") {}
 };
 
 class Deer: public BaseAnimal {
 public:
-    Deer(int h_max = 0, int food_type = 0, const char* name = nullptr, int h = 0): BaseAnimal(h, h_max, food_type, name) {}
+    Deer(int h_max = 0, int h = 0): BaseAnimal(h, h_max, 2, "Deer") {}
 };
 
 int main() {
@@ -100,25 +100,25 @@ int main() {
     Drob c = (a + b);
     c.print();
     */
-    Wolf w(100, 1, "Alex");
-    Tiger t(200, 1, "Pete");
-    Lion l(300, 1, "Liam");
+    Wolf w(100, 1);
+    Tiger t(200, 1);
+    Lion l(300, 1);
 
-    Giraffe g(400, 2, "Mark");
-    Deer d(500, 2, "Sam");
+    Giraffe g(400, 2);
+    Deer d(500, 2);
 
     for(int i = 0; i < 500; i++) {
-        w.tick();
-        t.tick();
+        //w.tick();
+        //t.tick();
         l.tick();
-        g.tick();
-        d.tick();
+        //g.tick();
+        //d.tick();
         if(w.is_hungry())
             w.feed(1);
         if(t.is_hungry())
             t.feed(1);
         if(l.is_hungry())
-            l.feed(1);
+            l.feed(2);
         if(g.is_hungry())
             g.feed(1);
         if(d.is_hungry())
