@@ -71,17 +71,17 @@ public:
 
 class Wolf: public BaseAnimal {
 public:
-    Wolf(int h_max = 0, int food_type = 0, int h = 0): BaseAnimal(h, h_max, food_type, "Wolf") {}
+    Wolf(int h_max = 0, int h = 0): BaseAnimal(h, h_max, 1, "Wolf") {}
 };
 
 class Lion: public BaseAnimal {
 public:
-    Lion(int h_max = 0, int food_type = 0, int h = 0): BaseAnimal(h, h_max, food_type, "Lion") {}
+    Lion(int h_max = 0, int h = 0): BaseAnimal(h, h_max, 1, "Lion") {}
 };
 
 class Tiger: public BaseAnimal {
 public:
-    Tiger(int h_max = 0, int food_type = 0, int h = 0): BaseAnimal(h, h_max, food_type, "Tiger") {}
+    Tiger(int h_max = 0, int h = 0): BaseAnimal(h, h_max, 1, "Tiger") {}
 };
 
 class Giraffe: public BaseAnimal {
