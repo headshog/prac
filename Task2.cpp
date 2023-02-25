@@ -269,13 +269,13 @@ public:
         List<Type>().operator=(q);
         swap(max_size, q.max_size);
     }
-    const Type& front() { return List<Type>::front(); }
-    size_t size() { return List<Type>::size(); }
-    bool empty() { return List<Type>::empty(); }
-    bool full() { return List<Type>::size() == max_size; };
+    const Type& front() const { return List<Type>::front(); }
+    size_t size() const { return List<Type>::size(); }
+    bool empty() const { return List<Type>::empty(); }
+    bool full() const { return List<Type>::size() == max_size; };
     void push(Type x) { if(List<Type>::size() != max_size) List<Type>::push_back(x); };
     void pop() { List<Type>::pop_front(); };
-    void print() {List<Type>::print(); };
+    void print() const {List<Type>::print(); };
 };
 
 int main() {
