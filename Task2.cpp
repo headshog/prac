@@ -273,7 +273,7 @@ public:
     size_t size() { return List<Type>::size(); }
     bool empty() { return List<Type>::empty(); }
     bool full() { return List<Type>::size() == max_size; };
-    void push(Type x) { List<Type>::push_back(x); };
+    void push(Type x) { if(List<Type>::size() != max_size) List<Type>::push_back(x); };
     void pop() { List<Type>::pop_front(); };
     void print() {List<Type>::print(); };
 };
@@ -289,11 +289,21 @@ int main() {
     Q.push(Acc2);
     Q.push(Acc2);
     Q.push(Acc1);
-    cout << Q.front();
+    cout << Q.size() << endl << Q.front();
     Q.pop();
     cout << Q.front();
     Q.pop();
     Q.pop();
     Q.print();
+    Q.pop();
+    Q.pop();
+    Q.pop();
+    cout << Q.size() << endl;
+    Q.push(Acc1);
+    cout << Q.size() << endl << Q.front();
+    Q.pop();
+    for(int i = 0; i < 100; i++)
+        Q.push(Acc1);
+    cout << (Q.full() == true ? "Full\n" : "Not full\n");
     return 0;
 }
