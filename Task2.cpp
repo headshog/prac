@@ -241,8 +241,7 @@ class Queue : public List<Type> {
 private:
     size_t max_size;
 public:
-    Queue() : List<Type>(), max_size(100) {};
-    Queue(size_t size) : List<Type>(), max_size(size) {};
+    Queue(size_t size = 100) : List<Type>(), max_size(size) {};
     Queue(const Queue& q) : List<Type>(q), max_size(q.max_size) {};
     Queue(Queue&& q) : List<Type>(q), max_size(q.max_size) {};
     Queue& operator= (const Queue& q) {
