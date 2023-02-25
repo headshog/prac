@@ -61,18 +61,19 @@ public:
             AccSwap(B);
         return *this;
     }
+    friend ostream& operator<< (ostream& s, const BankAccount& B) {
+		s << "----------------------\n";
+        s << "Account Number: " << B.AccNum << endl;
+        s << "Account Owner: " << B.AccOwner << endl;
+        s << "Account Creation Date: " << B.AccDate << endl;
+        s << "Account Balance: " << B.AccSum << endl;
+		return s;
+	}
     ~BankAccount() {
         if (AccOwner != nullptr)
             delete[] AccOwner;
         if (AccDate != nullptr)
             delete[] AccDate;
-    }
-    void print_bank_acc() const {
-        cout << "----------------------\n";
-        cout << "Account Number: " << AccNum << endl;
-        cout << "Account Owner: " << AccOwner << endl;
-        cout << "Account Creation Date: " << AccDate << endl;
-        cout << "Account Balance: " << AccSum << endl;
     }
 };
 int BankAccount::AccCnt(0);
@@ -248,7 +249,7 @@ public:
     }
     void print() const {
         for (Node* p = Head; p != nullptr; p = p->Next)
-            p->Elem.print_bank_acc();
+            cout << p->Elem;
     }
 };
 
@@ -288,9 +289,9 @@ int main() {
     Q.push(Acc2);
     Q.push(Acc2);
     Q.push(Acc1);
-    Q.front().print_bank_acc();
+    cout << Q.front();
     Q.pop();
-    Q.front().print_bank_acc();
+    cout << Q.front();
     Q.pop();
     Q.pop();
     Q.print();
