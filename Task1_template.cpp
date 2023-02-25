@@ -51,7 +51,7 @@ public:
         if (AccDate != nullptr)
             delete[] AccDate;
     }
-    void print_bank_acc() {
+    void print_bank_acc() const {
         cout << "----------------------\n";
         cout << "Account Number: " << AccNum << endl;
         cout << "Account Owner: " << AccOwner << endl;
@@ -87,16 +87,41 @@ private:
         Tail = now;
         sz = L.sz;
     }
+    void swap_list(List& L) {
+        Node *pr = nullptr, *now, *now_L = L.Head;
+        for(size_t i = 0; i < L.sz; i++) {
+            now = new Node;
+            swap(now->Elem, now_L->Elem);
+            now->Prev = pr;
+            now->Next = nullptr;
+            if(i == 0)
+                Head = now;
+            else
+                pr->Next = now;
+            pr = now;
+            now_L = now_L->Next;
+        }
+        Tail = now;
+        swap(sz, L.sz);
+    }
 public:
     List() : Head(nullptr), Tail(nullptr), sz(0) {}
     List(const List& L) {
         copy_list(L);
+    }
+    List(List&& L) {
+        swap_list(L);
     }
     List& operator= (const List& L) {
         if(this != &L) {
             this->~List();
             copy_list(L);
         }
+        return *this;
+    }
+    List& operator= (List&& L) {
+        if(this != &L)
+            swap_list(L);
         return *this;
     }
     ~List() {
@@ -107,18 +132,10 @@ public:
             delete q;
         }
     }
-    Type front() {
-        return Head->Elem;
-    }
-    Type back() {
-        return Tail->Elem;
-    }
-    size_t size() {
-        return sz;
-    }
-    bool empty() {
-        return sz == 0;
-    }
+    const Type& front() const { return Head->Elem; }
+    const Type& back() const { return Tail->Elem; }
+    size_t size() const { return sz; }
+    bool empty() const { return sz == 0; }
     void push_front(Type x) {
         Node* p = new Node;
         p->Elem = x;
@@ -213,7 +230,7 @@ public:
         delete p;
         sz--;
     }
-    void print() {
+    void print() const {
         for (Node* p = Head; p != nullptr; p = p->Next)
             p->Elem.print_bank_acc();
     }

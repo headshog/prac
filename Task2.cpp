@@ -51,7 +51,7 @@ public:
         if (AccDate != nullptr)
             delete[] AccDate;
     }
-    void print_bank_acc() {
+    void print_bank_acc() const {
         cout << "----------------------\n";
         cout << "Account Number: " << AccNum << endl;
         cout << "Account Owner: " << AccOwner << endl;
@@ -132,10 +132,10 @@ public:
             delete q;
         }
     }
-    Type front() { return Head->Elem; }
-    Type back() { return Tail->Elem; }
-    size_t size() { return sz; }
-    bool empty() { return sz == 0; }
+    const Type& front() const { return Head->Elem; }
+    const Type& back() const { return Tail->Elem; }
+    size_t size() const { return sz; }
+    bool empty() const { return sz == 0; }
     void push_front(Type x) {
         Node* p = new Node;
         p->Elem = x;
@@ -230,14 +230,14 @@ public:
         delete p;
         sz--;
     }
-    void print() {
+    void print() const {
         for (Node* p = Head; p != nullptr; p = p->Next)
             p->Elem.print_bank_acc();
     }
 };
 
 template<typename Type>
-class Queue : public List<Type> {
+class Queue : private List<Type> {
 private:
     size_t max_size;
 public:
@@ -252,7 +252,7 @@ public:
         List<Type>().operator=(q);
         swap(max_size, q.max_size);
     }
-    Type front() { return List<Type>::front(); }
+    const Type& front() { return List<Type>::front(); }
     size_t size() { return List<Type>::size(); }
     bool empty() { return List<Type>::empty(); }
     bool full() { return List<Type>::size() == max_size; };
@@ -265,22 +265,18 @@ int main() {
     BankAccount Acc1("Man", "12.12.12", 123456);
     BankAccount Acc2 = Acc1;
     BankAccount Acc3 = BankAccount("Woman", "01.01.01", 123456);
-    List<BankAccount> L;
-    L.push_back(Acc3);
-    L.push_back(Acc3);
-    L.push_front(Acc1);
-    L.insert(0, Acc2);
-    L.insert(1, Acc2);
-    L.insert(2, Acc2);
-    L.insert(L.size() - 1, Acc1);    
-    cout << L.size() << endl;
-    L.print();
-    L.erase(1);
-    L.erase(0);
-    L.erase(L.size() - 1);
-    L.pop_front();
-    L.pop_back();
-    L.print();
-    cout << L.empty() << endl;
+    Queue<BankAccount> Q;
+    Q.push(Acc1);
+    Q.push(Acc2);
+    Q.push(Acc3);
+    Q.push(Acc2);
+    Q.push(Acc2);
+    Q.push(Acc1);
+    Q.front().print_bank_acc();
+    Q.pop();
+    Q.front().print_bank_acc();
+    Q.pop();
+    Q.pop();
+    Q.print();
     return 0;
 }
