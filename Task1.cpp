@@ -12,20 +12,28 @@ private:
     size_t sizeowner, sizedate;
 	char* AccOwner;
 	char* AccDate;
-    void AccAssign(const char* Owner, const char* Date, int Sum, bool Num = false, size_t sizeow = 0, size_t sizeda = 0) {
+    void AccAssign(const char* Owner, const char* Date, int Sum, int Num = 0, bool NewNum = false, size_t sizeow = 0, size_t sizeda = 0) {
         if (!sizeow) sizeow = strlen(Owner);
         if (!sizeda) sizeda = strlen(Date);
         AccOwner = new char[(sizeowner = sizeow) + 1];
         AccDate = new char[(sizedate = sizeda) + 1];
         strcpy(AccOwner, Owner);
         strcpy(AccDate, Date);
-        if(Num) {
+        if(NewNum) {
             AccCnt++;
             AccNum = AccCnt;
         }
         else
-            AccNum = 0;
+            AccNum = Num;
         AccSum = Sum;
+    }
+    void AccSwap(BankAccount& B) {
+        swap(AccOwner, B.AccOwner);
+        swap(AccDate, B.AccDate);
+        swap(sizeowner, B.sizeowner);
+        swap(sizedate, B.sizedate);
+        swap(AccSum, B.AccSum);
+        swap(AccNum, B.AccNum);
     }
 public:
     BankAccount() {
@@ -35,14 +43,22 @@ public:
         AccAssign(Owner, Date, Sum);
     }
     BankAccount(const BankAccount& B) {
-        AccAssign(B.AccOwner, B.AccDate, B.AccSum, false, B.sizeowner, B.sizedate);
+        AccAssign(B.AccOwner, B.AccDate, B.AccSum, B.AccNum, false, B.sizeowner, B.sizedate);
+    }
+    BankAccount(BankAccount&& B) {
+        AccSwap(B);
     }
     BankAccount& operator= (const BankAccount& B) {
         if (this != &B) {
             delete[] AccOwner;
             delete[] AccDate;
-            AccAssign(B.AccOwner, B.AccDate, B.AccSum, true, B.sizeowner, B.sizedate);
+            AccAssign(B.AccOwner, B.AccDate, B.AccSum, 0, true, B.sizeowner, B.sizedate);
         }
+        return *this;
+    }
+    BankAccount& operator= (BankAccount&& B) {
+        if (this != &B)
+            AccSwap(B);
         return *this;
     }
     ~BankAccount() {
