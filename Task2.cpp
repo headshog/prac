@@ -149,11 +149,11 @@ public:
             delete q;
         }
     }
-    const Type& front() const { return Head->Elem; }
-    const Type& back() const { return Tail->Elem; }
+    const Type front() const { return Head->Elem; }
+    const Type back() const { return Tail->Elem; }
     size_t size() const { return sz; }
     bool empty() const { return sz == 0; }
-    void push_front(Type x) {
+    void push_front(Type& x) {
         Node* p = new Node;
         p->Elem = x;
         p->Prev = nullptr;
@@ -165,7 +165,7 @@ public:
         Head = p;
         sz++;
     }
-    void push_back(Type x) {
+    void push_back(Type& x) {
         Node* p = new Node;
         p->Elem = x;
         p->Prev = Tail;
@@ -205,7 +205,7 @@ public:
         delete p;
         sz--;
     }
-    void insert(size_t pos, Type x) {
+    void insert(size_t pos, Type& x) {
         if (pos >= sz || pos < 0) {
             cout << "No such position exists!\n";
             return;
@@ -273,7 +273,7 @@ public:
     size_t size() const { return List<Type>::size(); }
     bool empty() const { return List<Type>::empty(); }
     bool full() const { return List<Type>::size() == max_size; };
-    void push(Type x) { if(List<Type>::size() != max_size) List<Type>::push_back(x); };
+    void push(Type& x) { if(List<Type>::size() != max_size) List<Type>::push_back(x); };
     void pop() { List<Type>::pop_front(); };
     void print() const {List<Type>::print(); };
 };
