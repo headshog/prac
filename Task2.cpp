@@ -269,7 +269,7 @@ public:
         List<Type>().operator=(q);
         swap(max_size, q.max_size);
     }
-    const Type& front() const { return List<Type>::front(); }
+    const Type front() const { return List<Type>::front(); }
     size_t size() const { return List<Type>::size(); }
     bool empty() const { return List<Type>::empty(); }
     bool full() const { return List<Type>::size() == max_size; };
