@@ -43,13 +43,13 @@ protected:
 };
 
 ostream& operator<< (std::ostream& out, const BaseAbstractFigure::object& t)
-    {
-        switch(t) {
-            case BaseAbstractFigure::Rect: return (out << "Rectangle");
-            case BaseAbstractFigure::Circ: return (out << "Circle");
-        }
-        return (out);
+{
+    switch(t) {
+        case BaseAbstractFigure::Rect: return (out << "Rectangle");
+        case BaseAbstractFigure::Circ: return (out << "Circle");
     }
+    return (out);
+}
 
 class Rectangle : public BaseAbstractFigure {
 private:
