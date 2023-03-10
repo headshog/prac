@@ -130,9 +130,7 @@ int main() {
     cout << L2[0].GetSquare() << endl;
     cout << L2[1].GetSquare() << endl << endl;
     
-    ListOfForms L3(10, r);
-    L3[1].SetHeight(5.3);
-    L3[1].SetWidth(3.3);
+    const ListOfForms L3(10, r);
     cout << L3[0].GetSquare() << endl;
     cout << L3[1].GetSquare() << endl << endl;
 
