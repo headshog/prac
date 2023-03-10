@@ -94,16 +94,13 @@ public:
                 Form[i] = new Circle(Elem.GetRadius());
         }
     }
-    BaseAbstractFigure& operator[](size_t i) {
+    BaseAbstractFigure& operator[](size_t i) const {
         return *(Form[i]);
     }
-    BaseAbstractFigure::object GetType(size_t i) {
-        return Form[i]->GetType();
-    }
-    size_t size() {
+    size_t size() const {
         return sz;
     }
-    double CountSumSquare() {
+    double CountSumSquare() const {
         double sum = 0;
         for(size_t i = 0; i < sz; i++)
             sum += Form[i]->GetSquare();
