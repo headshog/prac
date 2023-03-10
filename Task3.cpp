@@ -93,7 +93,10 @@ public:
                 Form[i] = new Circle(Elem.GetRadius());
         }
     }
-    BaseAbstractFigure& operator[](size_t i) const {
+    BaseAbstractFigure& operator[](size_t i) {
+        return *(Form[i]);
+    }
+    const BaseAbstractFigure& operator[](size_t i) const {
         return *(Form[i]);
     }
     size_t size() const {
