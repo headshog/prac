@@ -75,7 +75,7 @@ private:
 public:
     Circle(double rad = 0) : BaseAbstractFigure(Circ), r(rad) {};
     double GetRadius() const { return r; }
-    double GetSquare() const { return 3.1415 * r * r; }
+    double GetSquare() const { return 3.14159265359 * r * r; }
     void SetRadius(double rad) { r = rad; }
 };
 
@@ -84,6 +84,7 @@ private:
     BaseAbstractFigure** Form;
     size_t sz;
 public:
+    ListOfForms(int n = 0) : Form(new BaseAbstractFigure*[n]), sz(n) {}
     ListOfForms(int n, const BaseAbstractFigure& Elem) {
         Form = new BaseAbstractFigure*[n], sz = n;
         for(size_t i = 0; i < sz; i++) {
