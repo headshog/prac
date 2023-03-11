@@ -99,6 +99,13 @@ public:
     const BaseAbstractFigure& operator[](size_t i) const {
         return *(Form[i]);
     }
+    void ReassignElem(size_t i, const BaseAbstractFigure& Elem) {
+        delete Form[i];
+        if(Elem.GetType() == BaseAbstractFigure::Rect)
+            Form[i] = new Rectangle(Elem.GetWidth(), Elem.GetHeight());
+        else
+            Form[i] = new Circle(Elem.GetRadius());
+    }
     size_t size() const {
         return sz;
     }
