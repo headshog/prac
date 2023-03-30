@@ -91,9 +91,36 @@ struct BaseIdent {
 vector<BaseIdent> ID;
 unordered_map<string, BaseIdent*> ID_refs;
 
-class AstNode {
-    
+struct AstOperand {
+    string name, mark;
 };
+struct IfOperand : AstOperand {
+    vector<BaseIdent> expr;
+    AstOperand* op1, op2;
+    bool is_else;
+};
+struct ForOperand : AstOperand {
+    vector<BaseIdent> expr1, expr2, expr3;
+    AstOperand* op;
+};
+struct WhileOperand : AstOperand {
+    vector<BaseIdent> expr;
+    AstOperand* op;
+};
+struct GotoOperand : AstOperand {
+    string mark_to;
+};
+struct ReadOperand : AstOperand {
+    string Ident;
+};
+struct WriteOperand : AstOperand {
+    vector<vector<BaseIdent>> expr;
+};
+struct ExprOperand : AstOperand {
+    vector<BaseIdent> expr;
+};
+vector<AstOperand*> OP;
+unordered_map<string, AstOperand*> GOTO;
 
 /* Func prototypes */
 void skip_spaces_endl();
@@ -103,9 +130,16 @@ string get_identifier();
 string get_mark();
 string get_value();
 
-error check_lexical_syntax();
+error check_lexic_syntax();
 error get_id_and_val(vector<BaseIdent>& ID, string& decl_type);
 error declaration(vector<BaseIdent>& ID);
+error if_operand();
+error for_operand();
+error while_operand();
+error goto_operand();
+error read_operand();
+error write_operand();
+error expr_operand();
 error operands();
 
 
@@ -123,7 +157,7 @@ int main(int argc, char **argv) {
     if (!file.read(buf.data(), size))
         return error_wrapper(FILE_BAD);
 
-    error lex_err = check_lexical_syntax();
+    error lex_err = check_lexic_syntax();
     if(lex_err != NOERROR)
         return error_wrapper(lex_err);
 }
@@ -214,7 +248,7 @@ string get_value() {
     }
 }
 
-error check_lexical_syntax() {
+error check_lexic_syntax() {
     error comm_err = erase_comm();
     if(comm_err != NOERROR)
         return comm_err;
@@ -318,6 +352,28 @@ error declaration(vector<BaseIdent>& ID) {
     return NOERROR;
 }
 
+error if_operand() {
+    return NOERROR;
+}
+error for_operand() {
+    return NOERROR;
+}
+error while_operand() {
+    return NOERROR;
+}
+error goto_operand() {
+    return NOERROR;
+}
+error read_operand() {
+    return NOERROR;
+}
+error write_operand() {
+    return NOERROR;
+}
+error expr_operand() {
+    return NOERROR;
+}
+
 error operands() {
     while(buf[ptr] != '}') {
         string mark = get_mark();
@@ -339,25 +395,25 @@ error operands() {
                 return LEX_NO_CLBRAC;
         }
         else if(op == "if") {
-            
+            if_operand();
         }
         else if(op == "for") {
-
+            for_operand();
         }
         else if(op == "while") {
-
+            while_operand();
         }
         else if(op == "goto") {
-            
+            goto_operand();
         }
         else if(op == "read") {
-            
+            read_operand();
         }
         else if(op == "write") {
-            
+            write_operand();
         }
         else {
-
+            expr_operand();
         }
     }
     return NOERROR;
