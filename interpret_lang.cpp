@@ -121,10 +121,10 @@ unordered_set<string> log_ops {
     "<", ">", "<=", ">=", "!=", "==", "and", "or", "not"
 };
 unordered_set<string> left_as_ops {
-    "*", "/", "+", "-", "<", ">", "<=", ">=", "==", "!=", "and", "or", "="
+    "*", "/", "+", "-", "<", ">", "<=", ">=", "==", "!=", "and", "or"
 };
 unordered_set<string> right_as_ops {
-    "+", "-", "not"
+    "+", "-", "not", "="
 };
 unordered_map<string, int> prior = {
     {"+!", 1}, {"-!", 1}, {"not", 1}, {"*", 2}, {"/", 2}, {"+", 3}, 
@@ -141,7 +141,6 @@ unordered_set<char> ident_stop {
 
 /* Structures for semantic checking and parsing to */
 /* language interpreter. */
-// MAYBE DESCTURCTORS ARE NEEDED
 struct BaseIdent {
     string name, type;
     variant<int, bool, string, vector<BaseIdent>> val;
@@ -210,7 +209,17 @@ error expr_operator(ExprOperator* op);
 error complex_operator(ComplexOperator *OP);
 error operator_wrapper(AstOperator*& OP, bool cycle = false);
 
-/* Realization */
+/*  
+СДЕЛАТЬ:
+1. СТОК ОШИБОК, ДАВАТЬ КОНКРЕТНЫЕ МЕСТА ОШИБКИ
+2. ПАРСИНГ BREAK И CONTINUE
+3. ДОБАВИТЬ В ПРОВЕРКУ is_logical_expression СЛУЧАЙ boolean = boolean
+3. ТЕСТИРОВАНИЕ ТОГО, ЧТО СДЕЛАНО
+4. ПАРСИНГ ВСЕЙ СТРУКТУРЫ ОПРЕРАТОРОВ В ПОЛИЗ
+5. ВО ВРЕМЯ ПАРСИНГА ПРОВЕРЯТЬ ОПЕРАНДЫ НА СОВМЕСТИМОСТЬ ТИПОВ
+6. В ОПЕРАТОРЕ GOTO ПРОВЕРЯТЬ МЕТКИ НА ПРАВИЛЬНОСТЬ
+7. ИНТЕРПРЕТАТОР
+*/
 int main(int argc, char **argv) {
     if(argc == 1)
         return error_wrapper(FILE_NO);
@@ -646,7 +655,6 @@ error complex_operator(ComplexOperator* OP) {
     }
     return ptr < buf.size() ? NOERROR : WRONG_OPER;
 }
-/* ADD BREAK AND CONTINUE WRAPPER */
 error operator_wrapper(AstOperator*& OP, bool cycle) {
     skip_spaces_endl();
     string mark = get_mark();
