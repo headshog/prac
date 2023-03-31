@@ -158,12 +158,6 @@ struct WriteOperator : AstOperator {
 struct ExprOperator : AstOperator {
     vector<BaseIdent> expr;
 };
-struct BreakOperator : AstOperator {
-    size_t CycleIndex;
-};
-struct ContinueOperator : AstOperator {
-    size_t CycleIndex;
-};
 ComplexOperator* OP;
 unordered_map<string, AstOperator*> GOTO;
 
@@ -175,7 +169,7 @@ string get_identifier();
 string get_mark();
 string get_value();
 
-error check_lexic_syntax();
+error check_lex_synt_sem();
 error get_id_and_val(vector<BaseIdent>& ID, string& decl_type);
 error declaration(vector<BaseIdent>& ID);
 
@@ -206,7 +200,7 @@ int main(int argc, char **argv) {
     if (!file.read(buf.data(), size))
         return error_wrapper(FILE_BAD);
 
-    error lex_err = check_lexic_syntax();
+    error lex_err = check_lex_synt_sem();
     if(lex_err != NOERROR)
         return error_wrapper(lex_err);
 }
@@ -295,7 +289,7 @@ string get_value() {
     }
 }
 
-error check_lexic_syntax() {
+error check_lex_synt_sem() {
     error comm_err = erase_comm_check();
     if(comm_err != NOERROR)
         return comm_err;
@@ -401,7 +395,7 @@ error declaration(vector<BaseIdent>& ID) {
 }
 
 bool is_logical_expression(vector<BaseIdent>& expr) {
-    for(auto it : expr) {
+    for(auto& it : expr) {
         /*if(it.name == "=") CASE OF BOOLEAN = BOOLEAN */
         if(log_ops.find(it.name) != log_ops.end())
             return true;
@@ -409,7 +403,7 @@ bool is_logical_expression(vector<BaseIdent>& expr) {
     return false;
 }
 error read_expression(vector<BaseIdent>& expr) {
-    
+    /* Realization of parsing expressions into PIE */
     return NOERROR;
 }
 error if_operator(IfOperator* op) {
@@ -474,7 +468,7 @@ error for_operator(ForOperator* op) {
         return LEX_NO_CLBRAC;
     ptr++;
 
-    error err_op = operator_wrapper(op->op);
+    error err_op = operator_wrapper(op->op, true);
     if(err_op != NOERROR)
         return err_op;
     return NOERROR;
@@ -491,7 +485,7 @@ error while_operator(WhileOperator* op) {
         return LEX_NO_CLBRAC;
     ptr++;
 
-    error err_op = operator_wrapper(op->op);
+    error err_op = operator_wrapper(op->op, true);
     if(err_op != NOERROR)
         return err_op;
     return NOERROR;
@@ -537,7 +531,6 @@ error write_operator(WriteOperator* op) {
 error expr_operator(ExprOperator* op) {
     return read_expression(op->expr);
 }
-
 error complex_operator(ComplexOperator* OP) {
     while(ptr < buf.size() && buf[ptr] != '}') {
         OP->ops.push_back(nullptr);
@@ -549,7 +542,6 @@ error complex_operator(ComplexOperator* OP) {
     }
     return ptr < buf.size() ? NOERROR : WRONG_OPER;
 }
-
 error operator_wrapper(AstOperator*& OP, bool cycle) {
     skip_spaces_endl();
     string mark = get_mark();
@@ -600,7 +592,7 @@ error operator_wrapper(AstOperator*& OP, bool cycle) {
         OP = new WriteOperator;
         write_operator(reinterpret_cast<WriteOperator*>(OP));
     }
-    else {
+    else if(op != "break" && op != "continue") {
         OP = new ExprOperator;
         OP->name = "expr";
         expr_operator(reinterpret_cast<ExprOperator*>(OP));
