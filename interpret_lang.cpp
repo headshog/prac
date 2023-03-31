@@ -29,7 +29,8 @@ enum error {
     WRONG_IF_EXPR = -16,
     WRONG_READ_EXPR = -17,
     WRONG_WRITE_EXPR = -18,
-    WRONG_FOR_EXPR = -19
+    WRONG_FOR_EXPR = -19,
+    WRONG_EXPR = -20
 };
 
 error error_wrapper(error e) {
@@ -91,6 +92,9 @@ error error_wrapper(error e) {
         case WRONG_FOR_EXPR:
             cout << "Wrong expression if for operator.\n";
             break;
+        case WRONG_EXPR:
+            cout << "Wrong expression in operator.\n";
+            break;
         case NOERROR:
             break;
     }
@@ -106,15 +110,29 @@ unordered_set<string> service_operators {
 unordered_set<string> service_decl {
     "int", "string", "boolean", "struct"
 };
+unordered_set<string> service_ops {
+    "<", ">", "<=", ">=", "!=", "==", "and", "or", "not", "+", "-", "=", "*", "/"
+};
 unordered_set<string> log_ops {
     "<", ">", "<=", ">=", "!=", "==", "and", "or", "not"
 };
+unordered_set<string> left_as_ops {
+    "*", "/", "+", "-", "<", ">", "<=", ">=", "==", "!=", "and", "or", "="
+};
+unordered_set<string> right_as_ops {
+    "+", "-", "not"
+};
+unordered_map<string, int> prior = {
+    {"+!", 1}, {"-!", 1}, {"not", 1}, {"*", 2}, {"/", 2}, {"+", 3}, 
+    {"-", 3}, {"<", 4}, {">", 4}, {"<=", 4}, {">=", 4}, {"==", 5}, 
+    {"!=", 5}, {"and", 6}, {"or", 7}, {"=", 8}
+};
 unordered_set<char> service_alf {
     ' ', ';', '=', '\n', '\t', '<', '>', '!', '+', '-', '*', '.', ':', ',',
-    '(', ')', '{', '}', '%'
+    '(', ')', '{', '}'
 };
 unordered_set<char> ident_stop {
-    ' ', ';', '=', '\n', '\t', ')', '<', '>', '!', '+', '-', '*', '.', ':', ','
+    ' ', ';', '=', '\n', '\t', ')', '<', '>', '!', '+', '-', '*', ':', ','
 };
 
 /* Structures for semantic checking and parsing to */
@@ -160,18 +178,20 @@ struct ExprOperator : AstOperator {
 };
 ComplexOperator* OP;
 unordered_map<string, AstOperator*> GOTO;
+vector<string> stk;
 
 /* Func prototypes */
 void skip_spaces_endl();
 error erase_comm_check();
 string get_service_word();
+string get_service_op();
 string get_identifier();
 string get_mark();
 string get_value();
 
 error check_lex_synt_sem();
-error get_id_and_val(vector<BaseIdent>& ID, string& decl_type);
-error declaration(vector<BaseIdent>& ID);
+error get_id_and_val(vector<BaseIdent>& ID, string& decl_type, string id);
+error declaration(vector<BaseIdent>& ID, string id = "");
 
 bool is_logical_expression(vector<BaseIdent>& expr);
 error read_expression(vector<BaseIdent>& expr);
@@ -244,6 +264,15 @@ string get_service_word() {
         w += buf[tmp_ptr++];
     return tmp_ptr < buf.size() && (service_operators.find(w) != service_operators.end() ||
                                      service_decl.find(w) != service_decl.end()) ? w : "";
+}
+string get_service_op() {
+    string w;
+    size_t tmp_ptr = ptr;
+    while(tmp_ptr < buf.size() && buf[tmp_ptr] != ' ' && buf[tmp_ptr] != '\n' && 
+          buf[tmp_ptr] != '(' && buf[tmp_ptr] != '\t' && !isdigit(buf[tmp_ptr]) &&
+          buf[tmp_ptr] != '\"')
+        w += buf[tmp_ptr++];
+    return tmp_ptr < buf.size() && (service_ops.find(w) != service_ops.end()) ? w : "";
 }
 string get_identifier() {
     string id;
@@ -320,13 +349,14 @@ error check_lex_synt_sem() {
 
     return NOERROR;
 }
-error get_id_and_val(vector<BaseIdent>& ID, string& decl_type) {
+error get_id_and_val(vector<BaseIdent>& ID, string& decl_type, string id) {
     string identifier, value;
     skip_spaces_endl();
     identifier = get_identifier();
     if(identifier.empty())
         return WRONG_IDENT_NAME;
     ptr += identifier.size();
+    identifier = id + "." + identifier;
     ID.push_back(BaseIdent());
     ID.back().type = decl_type;
     ID.back().name = identifier;
@@ -361,7 +391,7 @@ error get_id_and_val(vector<BaseIdent>& ID, string& decl_type) {
     else if(buf[ptr] == '{') {
         ptr++;
         skip_spaces_endl();
-        error decl_err = declaration(get<vector<BaseIdent>>(ID.back().val));
+        error decl_err = declaration(get<vector<BaseIdent>>(ID.back().val), identifier);
         if(decl_err != NOERROR)
             return decl_err;
         if(buf[ptr] != '}')
@@ -372,18 +402,17 @@ error get_id_and_val(vector<BaseIdent>& ID, string& decl_type) {
     }
     else if(buf[ptr] == ',') {
         ptr++;
-        get_id_and_val(ID, decl_type);
+        get_id_and_val(ID, decl_type, id);
     }
     return NOERROR;
 }
-error declaration(vector<BaseIdent>& ID) {
+error declaration(vector<BaseIdent>& ID, string id) {
     string decl_type = get_service_word();
-    while(service_operators.find(decl_type) != service_operators.end()) {
-        if(decl_type.empty())
+    while(service_operators.find(decl_type) == service_operators.end()) {
+        if(decl_type.empty() || service_decl.find(decl_type) == service_decl.end())
             return WRONG_DECL_TYPE;
         ptr += decl_type.size();
-
-        error err_get_id = get_id_and_val(ID, decl_type);
+        error err_get_id = get_id_and_val(ID, decl_type, id);
         if(err_get_id != NOERROR)
             return err_get_id;
 
@@ -404,13 +433,75 @@ bool is_logical_expression(vector<BaseIdent>& expr) {
 }
 error read_expression(vector<BaseIdent>& expr) {
     /* Realization of parsing expressions into PIE */
+    stk.clear();
+    string operand;
+    while(ptr < buf.size() && buf[ptr] != ')' &&
+          buf[ptr] != ';' && buf[ptr] != ',') {
+        if(buf[ptr] == '(')
+            stk.push_back("(");
+        else if(buf[ptr] == ')') {
+            while(!stk.empty() && stk.back() != "(") {
+                expr.push_back(BaseIdent());
+                expr.back().type = "operator";
+                expr.back().name = stk.back();
+                stk.pop_back();
+            }
+            if(stk.empty())
+                return WRONG_EXPR;
+            stk.pop_back();
+        }
+        else if((operand = get_identifier()) != "") {
+            auto it = ID_refs.insert(make_pair(operand, nullptr));
+            if(it.second)
+                return WRONG_IDENT_NAME;
+            expr.push_back(*(it).first->second);
+        }
+        else if((operand = get_value()) != "") {
+            expr.push_back(BaseIdent());
+            if(operand.front() == '\"') {
+                expr.back().type = "string";
+                get<string>(expr.back().val) = operand;
+            }
+            else if(isdigit(operand.front())) {
+                expr.back().type = "int";
+                get<int>(expr.back().val) = atoi(operand.c_str());
+            }
+            else if(operand == "true" || operand == "false") {
+                expr.back().type = "boolean";
+                get<bool>(expr.back().val) = operand == "true" ? true : false;
+            }
+            else
+                return WRONG_CONST_TYPE;
+        }
+        else if((operand = get_service_op()) != "") {
+            bool is_left_as = left_as_ops.find(operand) == left_as_ops.end();
+            bool cond = is_left_as ? prior[operand] <= prior[stk.back()] : prior[operand] < prior[stk.back()];
+            while(cond) {
+                expr.push_back(BaseIdent());
+                expr.back().type = "operator";
+                expr.back().name = stk.back();
+                stk.pop_back();
+                cond = is_left_as ? prior[operand] <= prior[stk.back()] : prior[operand] < prior[stk.back()];
+            }
+            stk.push_back(operand);
+        }
+        else
+            return WRONG_EXPR;
+    }
+    while(!stk.empty()) {
+        if(service_ops.find(stk.back()) == service_ops.end())
+            return WRONG_EXPR;
+        expr.push_back(BaseIdent());
+        expr.back().type = "operator";
+        expr.back().name = stk.back();
+        stk.pop_back();
+    }
     return NOERROR;
 }
 error if_operator(IfOperator* op) {
     if(buf[ptr] != '(')
         return LEX_NO_OPBRAC;
-    ptr++;
-    
+
     error err_expr = read_expression(op->expr);
     if(err_expr != NOERROR)
         return err_expr;
@@ -476,7 +567,6 @@ error for_operator(ForOperator* op) {
 error while_operator(WhileOperator* op) {
     if(buf[ptr] != '(')
         return LEX_NO_OPBRAC;
-    ptr++;
 
     error err_expr = read_expression(op->expr);
     if(err_expr != NOERROR)
