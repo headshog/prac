@@ -823,9 +823,9 @@ error operator_wrapper(AstOperator*& OP, bool cycle) {
 
     if(err_op != NOERROR)
         return ERROR;
-    OP->mark = mark;
-    if(mark != "")
-        GOTO.insert(make_pair(mark, OP));
+    
+    if(mark != "" && GOTO.insert(make_pair(mark, OP)).second)
+        OP->mark = mark;
     OP->name = op;
     skip_spaces_endl();
     if(buf[ptr] != '}' && buf[ptr] != ';') {
