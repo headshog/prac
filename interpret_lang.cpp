@@ -825,6 +825,7 @@ error operator_wrapper(AstOperator*& OP, bool cycle) {
 }
 
 error parse_to_prn(AstOperator* OP, vector<BaseIdent>& expr) {
+    /*
     if(OP->name == "{") {
         auto op = reinterpret_cast<ComplexOperator*>(OP);
         for(auto it: op->ops)
@@ -867,5 +868,6 @@ error parse_to_prn(AstOperator* OP, vector<BaseIdent>& expr) {
     else if(OP->name == "continue") {
         auto op = reinterpret_cast<ContinueOperator*>(OP);
     }
+    */
     return NOERROR;
 }
