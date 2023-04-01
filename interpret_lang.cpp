@@ -17,92 +17,127 @@ enum error {
     LEX_NOPROG = -4,
     LEX_NO_OPBRAC = -5,
     LEX_NO_CLBRAC = -6,
-    LEX_NO_SEMICOLON = -7,
-    LEX_NO_SEMICOLON_FOR = -8,
-    COMM_NOCLOSE = -9,
-    WRONG_DECL_TYPE = -10,
-    WRONG_CONST_TYPE = -11,
-    WRONG_IDENT_NAME = -12,
-    WRONG_DECL = -13,
-    WRONG_OPER = -14,
-    PREV_DECL = -15,
-    WRONG_IF_EXPR = -16,
-    WRONG_READ_EXPR = -17,
-    WRONG_WRITE_EXPR = -18,
-    WRONG_FOR_EXPR = -19,
-    WRONG_EXPR = -20,
-    WRONG_BR_CNT = -21
+    LEX_NO_OPBRAC_PR = -7,
+    LEX_NO_SEMICOLON = -8,
+    LEX_NO_SEMICOLON_FOR = -9,
+    COMM_NOCLOSE = -10,
+    WRONG_DECL_TYPE = -11,
+    WRONG_CONST_TYPE = -12,
+    WRONG_IDENT_NAME = -13,
+    WRONG_DECL = -14,
+    WRONG_OPER = -15,
+    PREV_DECL = -16,
+    WRONG_IF_EXPR = -17,
+    WRONG_READ_EXPR = -18,
+    WRONG_WRITE_EXPR = -19,
+    WRONG_FOR_EXPR = -20,
+    WRONG_EXPR = -21,
+    WRONG_BR_CNT = -22,
+    ERROR = -23
 };
+size_t cnt_lines = 1, comm_offset;
+vector<pair<error, size_t>> err_stk;
 
-error error_wrapper(error e) {
-    switch (e) {
-        case FILE_NO:
-            cout << "No filename given.\n";
-            break;
-        case FILE_BAD:
-            cout << "Cannot open given file.\n";
-            break;
-        case UNIDENT_SYMBOL:
-            cout << "Unidentified symbol found.\n";
-            break;
-        case LEX_NOPROG:
-            cout << "Lexical error: no word 'program' in the beginning.\n";
-            break;
-        case LEX_NO_OPBRAC:
-            cout << "Lexical error: no opening bracket '{' or '(' in operator.\n";
-            break;
-        case LEX_NO_CLBRAC:
-            cout << "Lexical error: no closing bracket '}' or ')' in operator.\n";
-            break;
-        case LEX_NO_SEMICOLON:
-            cout << "Lexical error: no ';' in the end of operator.\n";
-            break;
-        case LEX_NO_SEMICOLON_FOR:
-            cout << "Lexical error: no ';' in the middle of operator for.\n";
-            break;
-        case COMM_NOCLOSE:
-            cout << "Comment is not closed.\n";
-            break;
-        case WRONG_DECL_TYPE:
-            cout << "Wrong declaration type.\n";
-            break;
-        case WRONG_CONST_TYPE:
-            cout << "Constant type does not match the variable type.\n";
-            break;
-        case WRONG_IDENT_NAME:
-            cout << "Wrong identifier name.\n";
-            break;
-        case WRONG_DECL:
-            cout << "Wrong syntax in declaration.\n";
-            break;
-        case WRONG_OPER:
-            cout << "Wrong operator.\n";
-            break;
-        case PREV_DECL:
-            cout << "Variable is previously declared.\n";
-            break;
-        case WRONG_IF_EXPR:
-            cout << "Wrong expression in if operator.\n";
-            break;
-        case WRONG_READ_EXPR:
-            cout << "Wrong expression in read operator.\n";
-            break;
-        case WRONG_WRITE_EXPR:
-            cout << "Wrong expression in write operator.\n";
-            break;
-        case WRONG_FOR_EXPR:
-            cout << "Wrong expression if for operator.\n";
-            break;
-        case WRONG_EXPR:
-            cout << "Wrong expression in operator.\n";
-            break;
-        case WRONG_BR_CNT:
-            cout << "Using of operator break or continue not in cycle operators.\n";
-            break;
-        case NOERROR:
-            break;
+int error_wrapper() {
+    bool is_err = err_stk.empty();
+    for(auto it : err_stk) {
+        error e = it.first;
+        it.second += comm_offset;
+        switch (e) {
+            case FILE_NO:
+                cout << "No filename given.\n";
+                break;
+            case FILE_BAD:
+                cout << "Cannot open given file.\n";
+                break;
+            case UNIDENT_SYMBOL:
+                cout << "Unidentified symbol found on line "
+                << it.second - 1 << " or " << it.second << endl;
+                break;
+            case LEX_NOPROG:
+                cout << "Lexical error: no word 'program' in the beginning.\n";
+                break;
+            case LEX_NO_OPBRAC:
+                cout << "Lexical error: no opening bracket '{' or '(' in operator on line "
+                << it.second - 1 << " or "  << it.second << endl;
+                break;
+            case LEX_NO_CLBRAC:
+                cout << "Lexical error: no closing bracket '}' or ')' in operator on line "
+                << it.second - 1 << " or "  << it.second << endl;
+                break;
+            case LEX_NO_OPBRAC_PR:
+                cout << "Lexical error: no opening bracket '{' for 'program' operator" << endl;
+                break;
+            case LEX_NO_SEMICOLON:
+                cout << "Lexical error: no ';' in the end of operator on line "
+                << it.second - 1 << " or "  << it.second << endl;
+                break;
+            case LEX_NO_SEMICOLON_FOR:
+                cout << "Lexical error: no ';' in the middle of operator for on line "
+                << it.second - 1 << " or "  << it.second << endl;
+                break;
+            case COMM_NOCLOSE:
+                cout << "Comment is not closed on line "
+                << it.second - 1 << " or "  << it.second << endl;
+                break;
+            case WRONG_DECL_TYPE:
+                cout << "Wrong declaration type on line: "
+                << it.second - 1 << " or "  << it.second << endl;
+                break;
+            case WRONG_CONST_TYPE:
+                cout << "Constant type does not match the variable type on line "
+                << it.second - 1 << " or "  << it.second << endl;
+                break;
+            case WRONG_IDENT_NAME:
+                cout << "Wrong identifier name on line "
+                << it.second - 1 << " or "  << it.second << endl;
+                break;
+            case WRONG_DECL:
+                cout << "Wrong syntax in declaration on line "
+                << it.second - 1 << " or "  << it.second << endl;
+                break;
+            case WRONG_OPER:
+                cout << "Wrong operator on line "
+                << it.second - 1 << " or "  << it.second << " or no closing bracket '}'"
+                << " for 'program' operator.\n";
+                break;
+            case PREV_DECL:
+                cout << "Variable is previously declared on line "
+                << it.second - 1 << " or "  << it.second << endl;
+                break;
+            case WRONG_IF_EXPR:
+                cout << "Wrong expression in if operator on line "
+                << it.second - 1 << " or "  << it.second << endl;
+                break;
+            case WRONG_READ_EXPR:
+                cout << "Wrong expression in read operator on line "
+                << it.second - 1 << " or "  << it.second << endl;
+                break;
+            case WRONG_WRITE_EXPR:
+                cout << "Wrong expression in write operator on line "
+                << it.second - 1 << " or "  << it.second << endl;
+                break;
+            case WRONG_FOR_EXPR:
+                cout << "Wrong expression if for operator on line "
+                << it.second - 1 << " or "  << it.second << endl;
+                break;
+            case WRONG_EXPR:
+                cout << "Wrong expression in operator on line "
+                << it.second - 1 << " or "  << it.second << endl;
+                break;
+            case WRONG_BR_CNT:
+                cout << "Using of operator break or continue not in cycle operators on line "
+                << it.second - 1 << " or "  << it.second << endl;
+                break;
+            case NOERROR:
+                break;
+            case ERROR:
+                break;
+        }
     }
-    return e;
+    if(!err_stk.empty())
+        cout << endl;
+    return is_err ? 0 : -1;
 }
 
 /* Structures for lexical and syntactic checking */
@@ -179,12 +214,15 @@ struct WriteOperator : AstOperator {
 struct ExprOperator : AstOperator {
     vector<BaseIdent> expr;
 };
+struct BreakOperator : AstOperator {};
+struct ContinueOperator : AstOperator {};
 ComplexOperator* OP;
 unordered_map<string, AstOperator*> GOTO;
 vector<string> stk;
 
 /* Func prototypes */
 void skip_spaces_endl();
+void get_spaces_endl_back();
 error erase_comm_check();
 string get_service_word();
 string get_service_op();
@@ -211,63 +249,74 @@ error operator_wrapper(AstOperator*& OP, bool cycle = false);
 
 /*  
 СДЕЛАТЬ:
-1. СТОК ОШИБОК, ДАВАТЬ КОНКРЕТНЫЕ МЕСТА ОШИБКИ
-2. ПАРСИНГ BREAK И CONTINUE
-3. ДОБАВИТЬ В ПРОВЕРКУ is_logical_expression СЛУЧАЙ boolean = boolean
-3. ТЕСТИРОВАНИЕ ТОГО, ЧТО СДЕЛАНО
-4. ПАРСИНГ ВСЕЙ СТРУКТУРЫ ОПРЕРАТОРОВ В ПОЛИЗ
-5. ВО ВРЕМЯ ПАРСИНГА ПРОВЕРЯТЬ ОПЕРАНДЫ НА СОВМЕСТИМОСТЬ ТИПОВ
-6. В ОПЕРАТОРЕ GOTO ПРОВЕРЯТЬ МЕТКИ НА ПРАВИЛЬНОСТЬ
-7. ИНТЕРПРЕТАТОР
+1. ТЕСТИРОВАНИЕ ТОГО, ЧТО СДЕЛАНО
+2. ПАРСИНГ ВСЕЙ СТРУКТУРЫ ОПРЕРАТОРОВ В ПОЛИЗ
+3. ВО ВРЕМЯ ПАРСИНГА ПРОВЕРЯТЬ ОПЕРАНДЫ НА СОВМЕСТИМОСТЬ ТИПОВ (+ boolean = boolean)
+4. В ОПЕРАТОРЕ GOTO ПРОВЕРЯТЬ МЕТКИ НА ПРАВИЛЬНОСТЬ
+5. ИНТЕРПРЕТАТОР
 */
 int main(int argc, char **argv) {
     if(argc == 1)
-        return error_wrapper(FILE_NO);
+        err_stk.push_back({ FILE_NO, 0 });
 
     ifstream file(argv[1], ios::binary | ios::ate);
     streamsize size;
     if(file.fail() || (size = file.tellg()) == -1)
-        return error_wrapper(FILE_BAD);
+        err_stk.push_back({ FILE_BAD, 0 });
     
     file.seekg(0, ios::beg);
     buf = string(size, '0');
     if (!file.read(buf.data(), size))
-        return error_wrapper(FILE_BAD);
+        err_stk.push_back({ FILE_BAD, 0 });
 
     error lex_err = check_lex_synt_sem();
     if(lex_err != NOERROR)
-        return error_wrapper(lex_err);
+        return error_wrapper();
     
-    return NOERROR;
+    return error_wrapper();
 }
 
 void skip_spaces_endl() {
-    while(ptr < buf.size() && (buf[ptr] == ' ' || buf[ptr] == '\n' || buf[ptr] == '\t')) ptr++;
+    while(ptr < buf.size() && (buf[ptr] == ' ' || buf[ptr] == '\n' || buf[ptr] == '\t')) {
+        cnt_lines += buf[ptr] == '\n';
+        ptr++;
+    }
+}
+void get_spaces_endl_back() {
+    while(ptr >= 0 && (buf[ptr] == ' ' || buf[ptr] == '\n' || buf[ptr] == '\t')) {
+        cnt_lines -= buf[ptr] == '\n';
+        ptr--;
+    }
 }
 error erase_comm_check() {
     string tmp_buf;
     bool add_symb = true, str = false;
     for(size_t i = 0; i < buf.size(); i++) {
+        cnt_lines += buf[i] == '\n';
         if(add_symb && buf[i] == '\"')
             str = !str;
         
         if(!isdigit(buf[i]) && !isalpha(buf[i]) && service_alf.find(buf[i]) == service_alf.end())
-            return UNIDENT_SYMBOL;
+            err_stk.push_back({ UNIDENT_SYMBOL, cnt_lines });
 
         if(!str && buf[i] == '/' && i + 1 != buf.size() && buf[i + 1] == '*')
             add_symb = false, i += 2;
         else if(!add_symb) {
+            comm_offset += buf[i] == '\n';
             if(i + 1 == buf.size())
-                return COMM_NOCLOSE;
+                err_stk.push_back({ COMM_NOCLOSE, cnt_lines });
             if(buf[i] == '*' && buf[i + 1] == '/')
-                add_symb = true, i += 2;
+                add_symb = true, i++;
         }
         else if(add_symb)
             tmp_buf += buf[i];
     }
     if(!add_symb)
-        return COMM_NOCLOSE;
+        err_stk.push_back({ COMM_NOCLOSE, cnt_lines });
+    if(!stk.empty())
+        return ERROR;
     buf = tmp_buf;
+    cnt_lines = 1;
     return NOERROR;
 }
 
@@ -339,21 +388,21 @@ string get_value() {
 error check_lex_synt_sem() {
     error comm_err = erase_comm_check();
     if(comm_err != NOERROR)
-        return comm_err;
+        return ERROR;
 
     skip_spaces_endl();
     if(buf.size() < 7 || buf.substr(ptr, 7) != "program")
-        return LEX_NOPROG;
+        err_stk.push_back({ LEX_NOPROG, cnt_lines });
     ptr += 7;
-
     skip_spaces_endl();
     if(ptr >= buf.size() || buf[ptr] != '{')
-        return LEX_NO_OPBRAC;
+        err_stk.push_back({ LEX_NO_OPBRAC, cnt_lines });
     ptr++;
-
     skip_spaces_endl();
     if(ptr == buf.size())
-        return LEX_NO_CLBRAC;
+        err_stk.push_back({ LEX_NO_CLBRAC, cnt_lines });
+    if(!err_stk.empty())
+        return ERROR;
     
     error decl_err = declaration(ID);
     if(decl_err != NOERROR)
@@ -368,10 +417,19 @@ error check_lex_synt_sem() {
         return operator_err;
     
     skip_spaces_endl();
-    if(ptr >= buf.size() || buf[ptr] != '}')
-        return LEX_NO_CLBRAC;
+    if(ptr >= buf.size() || buf[ptr] != '}') {
+        err_stk.push_back({ LEX_NO_CLBRAC, cnt_lines });
+        return ERROR;
+    }
+    ptr++;
+    skip_spaces_endl();
+    if(ptr != buf.size()) {
+        err_stk.push_back({ LEX_NO_OPBRAC_PR, cnt_lines });
+        return ERROR;
+    }
 
-    return NOERROR;
+
+    return stk.empty() ? NOERROR : ERROR;
 }
 
 error get_id_and_val(vector<BaseIdent>& ID, string& decl_type, string id) {
@@ -379,7 +437,7 @@ error get_id_and_val(vector<BaseIdent>& ID, string& decl_type, string id) {
     skip_spaces_endl();
     identifier = get_identifier();
     if(identifier.empty())
-        return WRONG_IDENT_NAME;
+        err_stk.push_back({ WRONG_IDENT_NAME, cnt_lines });
     ptr += identifier.size();
     if(!id.empty())
         identifier = id + "." + identifier;
@@ -393,7 +451,7 @@ error get_id_and_val(vector<BaseIdent>& ID, string& decl_type, string id) {
 
     skip_spaces_endl();
     if(ptr >= buf.size() || (buf[ptr] != ';' && buf[ptr] != '=' && buf[ptr] != '{' && buf[ptr] != ','))
-        return WRONG_DECL;
+        err_stk.push_back({ WRONG_DECL, cnt_lines });
     if(buf[ptr] == '=') {
         ptr++;
         skip_spaces_endl();
@@ -401,11 +459,11 @@ error get_id_and_val(vector<BaseIdent>& ID, string& decl_type, string id) {
         ptr += value.size();
         skip_spaces_endl();
         if(value.empty() || ptr >= buf.size() || (buf[ptr] != ';' && buf[ptr] != ','))
-            return WRONG_DECL;
+            err_stk.push_back({ WRONG_DECL, cnt_lines });
         if((decl_type == "string" && value.front() != '\"') ||
            (decl_type == "int" && (value.front() != '-' && !isdigit(value.front()))) || 
            (decl_type == "boolean" && !(value == "true" || value == "false")))
-           return WRONG_CONST_TYPE;
+           err_stk.push_back({ WRONG_CONST_TYPE, cnt_lines });
         
         if(decl_type == "string")
             ID.back().val = value.substr(1, value.size() - 2);
@@ -418,21 +476,27 @@ error get_id_and_val(vector<BaseIdent>& ID, string& decl_type, string id) {
         ptr++;
         skip_spaces_endl();
         ID.back().val = vector<BaseIdent>();
-        error decl_err = declaration(get<vector<BaseIdent>>(ID.back().val), identifier);
-        if(decl_err != NOERROR)
-            return decl_err;
-        if(buf[ptr] != '}')
-            return LEX_NO_CLBRAC;
+        error err_decl = declaration(get<vector<BaseIdent>>(ID.back().val), identifier);
+        if(buf[ptr] != '}') {
+            err_stk.push_back({ LEX_NO_CLBRAC, cnt_lines });
+            return ERROR;
+        }
+        if(err_decl != NOERROR)
+            return ERROR;
         ptr++;
-        return buf[ptr] == ';' ? NOERROR : WRONG_DECL;
+        if(buf[ptr] != ';') {
+            err_stk.push_back({ WRONG_DECL, cnt_lines });
+            return ERROR;
+        }
+        return NOERROR;
     }
     if(!ID_refs.insert(make_pair(identifier, ID.back())).second)
-        return PREV_DECL;
+        err_stk.push_back({ PREV_DECL, cnt_lines });
     if(buf[ptr] == ',') {
         ptr++;
         error err_id_val = get_id_and_val(ID, decl_type, id);
         if(err_id_val != NOERROR)
-            return err_id_val;
+            return ERROR;
     }
     return NOERROR;
 }
@@ -440,14 +504,15 @@ error declaration(vector<BaseIdent>& ID, string id) {
     string decl_type = get_service_word();
     while(service_operators.find(decl_type) == service_operators.end()) {
         if(decl_type.empty() || service_decl.find(decl_type) == service_decl.end())
-            return WRONG_DECL_TYPE;
+            err_stk.push_back({ WRONG_DECL_TYPE, cnt_lines });
         ptr += decl_type.size();
         error err_get_id = get_id_and_val(ID, decl_type, id);
         if(err_get_id != NOERROR)
-            return err_get_id;
-        if(buf[ptr] != ';')
-            return LEX_NO_SEMICOLON;
-
+            return ERROR;
+        if(buf[ptr] != ';') {
+            err_stk.push_back({ LEX_NO_SEMICOLON, cnt_lines });
+            return ERROR;
+        }
         ptr++;
         skip_spaces_endl();
         decl_type = get_service_word();
@@ -477,7 +542,7 @@ error read_expression(vector<BaseIdent>& expr, bool is_single_expr) {
                 stk.pop_back();
             }
             if(stk.empty())
-                return WRONG_EXPR;
+                err_stk.push_back({ WRONG_EXPR, cnt_lines });
             stk.pop_back();
             if(!is_single_expr || (is_single_expr && buf[ptr] != ';'))
                 ptr++;
@@ -497,13 +562,13 @@ error read_expression(vector<BaseIdent>& expr, bool is_single_expr) {
                 expr.back().val = operand == "true" ? true : false;
             }
             else
-                return WRONG_CONST_TYPE;
+                err_stk.push_back({ WRONG_CONST_TYPE, cnt_lines });
             ptr += operand.size();
         }
         else if((operand = get_identifier()) != "") {
             auto it = ID_refs.insert(make_pair(operand, BaseIdent()));
             if(it.second)
-                return WRONG_IDENT_NAME;
+                err_stk.push_back({ WRONG_IDENT_NAME, cnt_lines });
             auto elem = it.first->second;
             expr.emplace_back(BaseIdent{ elem.name, elem.type, elem.val });
             ptr += operand.size();
@@ -522,31 +587,33 @@ error read_expression(vector<BaseIdent>& expr, bool is_single_expr) {
             ptr += operand.size();
         }
         else
-            return WRONG_EXPR;
+            err_stk.push_back({ WRONG_EXPR, cnt_lines });
         if(stk.empty())
             break;
     }
     while(!stk.empty()) {
         if(service_ops.find(stk.back()) == service_ops.end())
-            return WRONG_EXPR;
+            err_stk.push_back({ WRONG_EXPR, cnt_lines });
         expr.emplace_back(BaseIdent{ stk.back(), "operator" });
         stk.pop_back();
     }
     return NOERROR;
 }
 error if_operator(IfOperator* op) {
-    if(buf[ptr] != '(')
-        return LEX_NO_OPBRAC;
+    if(buf[ptr] != '(') {
+        err_stk.push_back({ LEX_NO_OPBRAC, cnt_lines });
+        return ERROR;
+    }
 
     error err_expr = read_expression(op->expr);
     if(err_expr != NOERROR)
-        return err_expr;
+        return ERROR;
     if(!is_logical_expression(op->expr))
-        return WRONG_IF_EXPR;
+        err_stk.push_back({ WRONG_IF_EXPR, cnt_lines });
 
     error err_op = operator_wrapper(op->op1);
     if(err_op != NOERROR)
-        return err_op;
+        return ERROR;
     
     ptr++;
     skip_spaces_endl();
@@ -554,94 +621,110 @@ error if_operator(IfOperator* op) {
     if(el != "else") {
         op->is_else = false;
         op->op2 = nullptr;
+        ptr--;
+        get_spaces_endl_back();
     }
     else {
         op->is_else = true;
         ptr += el.size();
         err_op = operator_wrapper(op->op2);
         if(err_op != NOERROR)
-            return err_op;
+            return ERROR;
     }
     return NOERROR;
 }
 error for_operator(ForOperator* op) {
-    if(buf[ptr] != '(')
-        return LEX_NO_OPBRAC;
+    if(buf[ptr] != '(') {
+        err_stk.push_back({ LEX_NO_OPBRAC, cnt_lines });
+        return ERROR;
+    }
     ptr++;
 
-    stk.push_back("(");
+    stk.emplace_back("(");
     error err_expr = read_expression(op->expr1);
     if(err_expr != NOERROR)
-        return err_expr;
+        return ERROR;
 
-    stk.push_back("(");
+    stk.emplace_back("(");
     err_expr = read_expression(op->expr2);
     if(err_expr != NOERROR)
-        return err_expr;
+        return ERROR;
     if(!is_logical_expression(op->expr2))
         return WRONG_FOR_EXPR;
 
-    stk.push_back("(");
+    stk.emplace_back("(");
     err_expr = read_expression(op->expr3);
     if(err_expr != NOERROR)
-        return err_expr;
+        return ERROR;
 
     error err_op = operator_wrapper(op->op, true);
     if(err_op != NOERROR)
-        return err_op;
+        return ERROR;
     return NOERROR;
 }
 error while_operator(WhileOperator* op) {
-    if(buf[ptr] != '(')
-        return LEX_NO_OPBRAC;
+    if(buf[ptr] != '(') {
+        err_stk.push_back({ LEX_NO_OPBRAC, cnt_lines });
+        return ERROR;
+    }
 
     error err_expr = read_expression(op->expr);
     if(err_expr != NOERROR)
-        return err_expr;
+        return ERROR;
 
     error err_op = operator_wrapper(op->op, true);
     if(err_op != NOERROR)
-        return err_op;
+        return ERROR;
     return NOERROR;
 }
 error goto_operator(GotoOperator* op) {
     string id = get_identifier();
     if(id.empty())
-        return WRONG_IDENT_NAME;
+        err_stk.push_back({ WRONG_IDENT_NAME, cnt_lines });
     op->mark_to = id;
     ptr += id.size();
     return NOERROR;
 }
 error read_operator(ReadOperator* op) {
-    if(buf[ptr] != '(')
-        return LEX_NO_OPBRAC;
+    if(buf[ptr] != '(') {
+        err_stk.push_back({ LEX_NO_OPBRAC, cnt_lines });
+        return ERROR;
+    }
     ptr++;
     skip_spaces_endl();
     string id = get_identifier();
     if(id.empty() || ID_refs.insert(make_pair(id, BaseIdent())).second)
-        return WRONG_IDENT_NAME;
+        err_stk.push_back({ WRONG_IDENT_NAME, cnt_lines });
     ptr += id.size();
     skip_spaces_endl();
-    if(buf[ptr] != ')')
-        return LEX_NO_CLBRAC;
+    if(buf[ptr] != ')') {
+        err_stk.push_back({ LEX_NO_CLBRAC, cnt_lines });
+        return ERROR;
+    }
     ptr++;
     return NOERROR;
 }
 error write_operator(WriteOperator* op) {
-    if(buf[ptr] != '(')
-        return LEX_NO_OPBRAC;
+    if(buf[ptr] != '(') {
+        err_stk.push_back({ LEX_NO_OPBRAC, cnt_lines });
+        return ERROR;
+    }
     while(ptr < buf.size() && buf[ptr] != ';') {
         ptr++;
         op->expr.emplace_back(vector<BaseIdent>());
-        stk.push_back("(");
+        stk.emplace_back("(");
         error err_expr = read_expression(op->expr.back());
         if(err_expr != NOERROR)
-            return err_expr;
+            return ERROR;
     }
-    return ptr < buf.size() ? NOERROR : LEX_NO_SEMICOLON;
+    if(ptr >= buf.size()) {
+        err_stk.push_back({ LEX_NO_SEMICOLON, cnt_lines });
+        return ERROR;
+    }
+    return NOERROR;
 }
 error expr_operator(ExprOperator* op) {
-    stk.push_back("(");
+    stk.emplace_back("(");
     return read_expression(op->expr, true);
 }
 error complex_operator(ComplexOperator* OP) {
@@ -649,11 +732,15 @@ error complex_operator(ComplexOperator* OP) {
         OP->ops.emplace_back(nullptr);
         error err_op_wrap = operator_wrapper(OP->ops.back());
         if(err_op_wrap != NOERROR)
-            return err_op_wrap;
+            return ERROR;
         ptr++;
         skip_spaces_endl();
     }
-    return ptr < buf.size() ? NOERROR : WRONG_OPER;
+    if(ptr >= buf.size()) {
+        err_stk.push_back({ WRONG_OPER, cnt_lines });
+        return ERROR;
+    }
+    return NOERROR;
 }
 error operator_wrapper(AstOperator*& OP, bool cycle) {
     skip_spaces_endl();
@@ -665,7 +752,7 @@ error operator_wrapper(AstOperator*& OP, bool cycle) {
     skip_spaces_endl();
     string op = get_service_word();
     if(!cycle && (op == "break" || op == "continue"))
-        return WRONG_BR_CNT;
+        err_stk.push_back({ WRONG_BR_CNT, cnt_lines });
     ptr += op.size();
     skip_spaces_endl();
 
@@ -673,8 +760,10 @@ error operator_wrapper(AstOperator*& OP, bool cycle) {
     if(op == "{") {
         OP = new ComplexOperator;
         err_op = complex_operator(reinterpret_cast<ComplexOperator*>(OP));
-        if(buf[ptr] != '}')
-            return LEX_NO_CLBRAC;
+        if(buf[ptr] != '}') {
+            err_stk.push_back({ LEX_NO_CLBRAC, cnt_lines });
+            return ERROR;
+        }
     }
     else if(op == "if") {
         OP = new IfOperator;
@@ -691,32 +780,47 @@ error operator_wrapper(AstOperator*& OP, bool cycle) {
     else if(op == "goto") {
         OP = new GotoOperator;
         err_op = goto_operator(reinterpret_cast<GotoOperator*>(OP));
-        if(buf[ptr] != ';')
-            return LEX_NO_SEMICOLON;
+        if(buf[ptr] != ';') {
+            err_stk.push_back({ LEX_NO_SEMICOLON, cnt_lines });
+            return ERROR;
+        }
     }
     else if(op == "read") {
         OP = new ReadOperator;
         err_op = read_operator(reinterpret_cast<ReadOperator*>(OP));
-        if(buf[ptr] != ';')
-            return LEX_NO_SEMICOLON;
+        if(buf[ptr] != ';') {
+            err_stk.push_back({ LEX_NO_SEMICOLON, cnt_lines });
+            return ERROR;
+        }
     }
     else if(op == "write") {
         OP = new WriteOperator;
         err_op = write_operator(reinterpret_cast<WriteOperator*>(OP));
-        if(buf[ptr] != ';')
-            return LEX_NO_SEMICOLON;
+        if(buf[ptr] != ';') {
+            err_stk.push_back({ LEX_NO_SEMICOLON, cnt_lines });
+            return ERROR;
+        }
     }
     else if(op != "break" && op != "continue") {
         OP = new ExprOperator;
         op = "expr";
         err_op = expr_operator(reinterpret_cast<ExprOperator*>(OP));
     }
+    else if(op == "break")
+        OP = new BreakOperator;
+    else if(op == "continue")
+        OP = new ContinueOperator;
+
     if(err_op != NOERROR)
-        return err_op;
+        return ERROR;
     OP->mark = mark;
     if(mark != "")
         GOTO.insert(make_pair(mark, OP));
     OP->name = op;
     skip_spaces_endl();
-    return buf[ptr] == '}' || buf[ptr] == ';' ? NOERROR : LEX_NO_SEMICOLON;
+    if(buf[ptr] != '}' && buf[ptr] != ';') {
+        err_stk.push_back({ LEX_NO_SEMICOLON, cnt_lines });
+        return ERROR;
+    }
+    return NOERROR;
 }
