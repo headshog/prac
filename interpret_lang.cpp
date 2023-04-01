@@ -247,6 +247,8 @@ error expr_operator(ExprOperator* op);
 error complex_operator(ComplexOperator *OP);
 error operator_wrapper(AstOperator*& OP, bool cycle = false);
 
+error parse_to_prn(AstOperator* OP, vector<BaseIdent>& expr);
+
 /*  
 СДЕЛАТЬ:
 1. ТЕСТИРОВАНИЕ ТОГО, ЧТО СДЕЛАНО
@@ -296,8 +298,11 @@ error erase_comm_check() {
         if(add_symb && buf[i] == '\"')
             str = !str;
         
-        if(!isdigit(buf[i]) && !isalpha(buf[i]) && service_alf.find(buf[i]) == service_alf.end())
+        if(add_symb && !isdigit(buf[i]) && !isalpha(buf[i]) &&
+           service_alf.find(buf[i]) == service_alf.end()) {
             err_stk.push_back({ UNIDENT_SYMBOL, cnt_lines });
+            return ERROR;
+        }
 
         if(!str && buf[i] == '/' && i + 1 != buf.size() && buf[i + 1] == '*')
             add_symb = false, i += 2;
@@ -406,7 +411,7 @@ error check_lex_synt_sem() {
     
     error decl_err = declaration(ID);
     if(decl_err != NOERROR)
-        return decl_err;
+        return ERROR;
 
     skip_spaces_endl();
     OP = new ComplexOperator;
@@ -414,7 +419,7 @@ error check_lex_synt_sem() {
     OP->name = "{";
     error operator_err = complex_operator(OP);
     if(operator_err != NOERROR)
-        return operator_err;
+        return ERROR;
     
     skip_spaces_endl();
     if(ptr >= buf.size() || buf[ptr] != '}') {
@@ -428,8 +433,11 @@ error check_lex_synt_sem() {
         return ERROR;
     }
 
+    vector<BaseIdent> expr;
+    if(parse_to_prn(OP, expr) != NOERROR)
+        return ERROR;
 
-    return stk.empty() ? NOERROR : ERROR;
+    return NOERROR;
 }
 
 error get_id_and_val(vector<BaseIdent>& ID, string& decl_type, string id) {
@@ -477,6 +485,7 @@ error get_id_and_val(vector<BaseIdent>& ID, string& decl_type, string id) {
         skip_spaces_endl();
         ID.back().val = vector<BaseIdent>();
         error err_decl = declaration(get<vector<BaseIdent>>(ID.back().val), identifier);
+        
         if(buf[ptr] != '}') {
             err_stk.push_back({ LEX_NO_CLBRAC, cnt_lines });
             return ERROR;
@@ -494,8 +503,7 @@ error get_id_and_val(vector<BaseIdent>& ID, string& decl_type, string id) {
         err_stk.push_back({ PREV_DECL, cnt_lines });
     if(buf[ptr] == ',') {
         ptr++;
-        error err_id_val = get_id_and_val(ID, decl_type, id);
-        if(err_id_val != NOERROR)
+        if(get_id_and_val(ID, decl_type, id) != NOERROR)
             return ERROR;
     }
     return NOERROR;
@@ -506,8 +514,7 @@ error declaration(vector<BaseIdent>& ID, string id) {
         if(decl_type.empty() || service_decl.find(decl_type) == service_decl.end())
             err_stk.push_back({ WRONG_DECL_TYPE, cnt_lines });
         ptr += decl_type.size();
-        error err_get_id = get_id_and_val(ID, decl_type, id);
-        if(err_get_id != NOERROR)
+        if(get_id_and_val(ID, decl_type, id) != NOERROR)
             return ERROR;
         if(buf[ptr] != ';') {
             err_stk.push_back({ LEX_NO_SEMICOLON, cnt_lines });
@@ -515,6 +522,9 @@ error declaration(vector<BaseIdent>& ID, string id) {
         }
         ptr++;
         skip_spaces_endl();
+        string id = get_identifier();
+        if(!id.empty() && !ID_refs.insert(make_pair(id, BaseIdent())).second)
+            break;
         decl_type = get_service_word();
     }
     return NOERROR;
@@ -605,14 +615,12 @@ error if_operator(IfOperator* op) {
         return ERROR;
     }
 
-    error err_expr = read_expression(op->expr);
-    if(err_expr != NOERROR)
+    if(read_expression(op->expr) != NOERROR)
         return ERROR;
     if(!is_logical_expression(op->expr))
         err_stk.push_back({ WRONG_IF_EXPR, cnt_lines });
 
-    error err_op = operator_wrapper(op->op1);
-    if(err_op != NOERROR)
+    if(operator_wrapper(op->op1) != NOERROR)
         return ERROR;
     
     ptr++;
@@ -627,8 +635,7 @@ error if_operator(IfOperator* op) {
     else {
         op->is_else = true;
         ptr += el.size();
-        err_op = operator_wrapper(op->op2);
-        if(err_op != NOERROR)
+        if(operator_wrapper(op->op2) != NOERROR)
             return ERROR;
     }
     return NOERROR;
@@ -641,24 +648,20 @@ error for_operator(ForOperator* op) {
     ptr++;
 
     stk.emplace_back("(");
-    error err_expr = read_expression(op->expr1);
-    if(err_expr != NOERROR)
+    if(read_expression(op->expr1) != NOERROR)
         return ERROR;
 
     stk.emplace_back("(");
-    err_expr = read_expression(op->expr2);
-    if(err_expr != NOERROR)
+    if(read_expression(op->expr2) != NOERROR)
         return ERROR;
     if(!is_logical_expression(op->expr2))
         return WRONG_FOR_EXPR;
 
     stk.emplace_back("(");
-    err_expr = read_expression(op->expr3);
-    if(err_expr != NOERROR)
+    if(read_expression(op->expr3) != NOERROR)
         return ERROR;
 
-    error err_op = operator_wrapper(op->op, true);
-    if(err_op != NOERROR)
+    if(operator_wrapper(op->op, true) != NOERROR)
         return ERROR;
     return NOERROR;
 }
@@ -668,12 +671,10 @@ error while_operator(WhileOperator* op) {
         return ERROR;
     }
 
-    error err_expr = read_expression(op->expr);
-    if(err_expr != NOERROR)
+    if(read_expression(op->expr) != NOERROR)
         return ERROR;
 
-    error err_op = operator_wrapper(op->op, true);
-    if(err_op != NOERROR)
+    if(operator_wrapper(op->op, true) != NOERROR)
         return ERROR;
     return NOERROR;
 }
@@ -713,8 +714,7 @@ error write_operator(WriteOperator* op) {
         ptr++;
         op->expr.emplace_back(vector<BaseIdent>());
         stk.emplace_back("(");
-        error err_expr = read_expression(op->expr.back());
-        if(err_expr != NOERROR)
+        if(read_expression(op->expr.back()) != NOERROR)
             return ERROR;
     }
     if(ptr >= buf.size()) {
@@ -730,8 +730,7 @@ error expr_operator(ExprOperator* op) {
 error complex_operator(ComplexOperator* OP) {
     while(ptr < buf.size() && buf[ptr] != '}') {
         OP->ops.emplace_back(nullptr);
-        error err_op_wrap = operator_wrapper(OP->ops.back());
-        if(err_op_wrap != NOERROR)
+        if(operator_wrapper(OP->ops.back()) != NOERROR)
             return ERROR;
         ptr++;
         skip_spaces_endl();
@@ -821,6 +820,52 @@ error operator_wrapper(AstOperator*& OP, bool cycle) {
     if(buf[ptr] != '}' && buf[ptr] != ';') {
         err_stk.push_back({ LEX_NO_SEMICOLON, cnt_lines });
         return ERROR;
+    }
+    return NOERROR;
+}
+
+error parse_to_prn(AstOperator* OP, vector<BaseIdent>& expr) {
+    if(OP->name == "{") {
+        auto op = reinterpret_cast<ComplexOperator*>(OP);
+        for(auto it: op->ops)
+            if(parse_to_prn(it, expr) != NOERROR)
+                return ERROR;
+    }
+    else if(OP->name == "if") {
+        auto op = reinterpret_cast<IfOperator*>(OP);
+    }
+    else if(OP->name == "for") {
+        auto op = reinterpret_cast<ForOperator*>(OP);
+    }
+    else if(OP->name == "while") {
+        auto op = reinterpret_cast<WhileOperator*>(OP);
+    }
+    else if(OP->name == "goto") {
+        auto op = reinterpret_cast<GotoOperator*>(OP);
+    }
+    else if(OP->name == "read") {
+        auto op = reinterpret_cast<ReadOperator*>(OP);
+        expr.push_back(ID_refs[op->Ident]);
+        expr.push_back(BaseIdent{ op->name, "operator" });
+    }
+    else if(OP->name == "write") {
+        auto op = reinterpret_cast<WriteOperator*>(OP);
+        for(auto& it : op->expr)
+            for(auto& it1 : it)
+                expr.push_back(it1);
+        expr.push_back(BaseIdent{ op->name, "operator" });
+    }
+    else if(OP->name == "expr") {
+        auto op = reinterpret_cast<ExprOperator*>(OP);
+        for(auto& it : op->expr)
+            expr.push_back(it);
+        expr.push_back(BaseIdent{ op->name, "operator" });
+    }
+    else if(OP->name == "break") {
+        auto op = reinterpret_cast<BreakOperator*>(OP);
+    }
+    else if(OP->name == "continue") {
+        auto op = reinterpret_cast<ContinueOperator*>(OP);
     }
     return NOERROR;
 }
