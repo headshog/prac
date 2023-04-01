@@ -33,7 +33,8 @@ enum error {
     WRONG_FOR_EXPR = -20,
     WRONG_EXPR = -21,
     WRONG_BR_CNT = -22,
-    ERROR = -23
+    WRONG_GOTO_IDENT = -23,
+    ERROR = -24
 };
 size_t cnt_lines = 1, comm_offset;
 vector<pair<error, size_t>> err_stk;
@@ -128,6 +129,9 @@ int error_wrapper() {
             case WRONG_BR_CNT:
                 cout << "Using of operator break or continue not in cycle operators on line "
                 << it.second - 1 << " or "  << it.second << endl;
+                break;
+            case WRONG_GOTO_IDENT:
+                cout << "Wrong identifier in goto operator.\n";
                 break;
             case NOERROR:
                 break;
@@ -832,7 +836,6 @@ error operator_wrapper(AstOperator*& OP, bool cycle) {
 }
 
 error parse_to_prn(AstOperator* OP, vector<BaseIdent>& expr) {
-    /*
     if(OP->name == "{") {
         auto op = reinterpret_cast<ComplexOperator*>(OP);
         for(auto it: op->ops)
@@ -850,6 +853,10 @@ error parse_to_prn(AstOperator* OP, vector<BaseIdent>& expr) {
     }
     else if(OP->name == "goto") {
         auto op = reinterpret_cast<GotoOperator*>(OP);
+        if(GOTO.insert(make_pair(op->mark_to, nullptr)).second) {
+            err_stk.push_back({ WRONG_GOTO_IDENT, 0 });
+            return ERROR;
+        }
     }
     else if(OP->name == "read") {
         auto op = reinterpret_cast<ReadOperator*>(OP);
@@ -875,6 +882,5 @@ error parse_to_prn(AstOperator* OP, vector<BaseIdent>& expr) {
     else if(OP->name == "continue") {
         auto op = reinterpret_cast<ContinueOperator*>(OP);
     }
-    */
     return NOERROR;
 }
