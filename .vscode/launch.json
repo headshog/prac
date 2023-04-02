@@ -6,7 +6,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${fileDirname}/${fileBasenameNoExtension}",
-            "args": ["tests/test6.txt"],
+            "args": ["tests/test1.txt"],
             "stopAtEntry": false,
             "cwd": "${fileDirname}",
             "environment": [],

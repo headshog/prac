@@ -38,7 +38,8 @@ enum error {
     WRONG_GOTO_IDENT = -25,
     WRONG_EXPR_OP_TYPES = -26,
     WRONG_WRITE_EXPR_TYPE = -27,
-    ERROR = -28
+    WRONG_DECL_AFTER_SECT = -28,
+    ERROR = -29
 };
 size_t cnt_lines = 1, comm_offset;
 vector<pair<error, size_t>> err_stk;
@@ -57,7 +58,7 @@ int error_wrapper() {
                 break;
             case UNIDENT_SYMBOL:
                 cout << "Unidentified symbol found on line "
-                << it.second - 1 << " or " << it.second << endl;
+                << it.second << endl;
                 break;
             case LEX_NOPROG:
                 cout << "Lexical error: no word 'program' in the beginning.\n";
@@ -79,23 +80,22 @@ int error_wrapper() {
                 break;
             case LEX_NO_SEMICOLON_FOR:
                 cout << "Lexical error: no ';' in the middle of operator 'for' on line "
-                << it.second - 1 << " or "  << it.second << endl;
+                << it.second << endl;
                 break;
             case COMM_NOCLOSE:
-                cout << "Comment is not closed on line "
-                << it.second - 1 << " or "  << it.second << endl;
+                cout << "Comment is not closed on line ";
                 break;
             case WRONG_DECL_TYPE:
                 cout << "Wrong declaration type on line: "
-                << it.second - 1 << " or "  << it.second << endl;
+                << it.second << endl;
                 break;
             case WRONG_CONST_TYPE:
                 cout << "Constant type does not match the variable type on line "
-                << it.second - 1 << " or "  << it.second << endl;
+                << it.second << endl;
                 break;
             case WRONG_IDENT_NAME:
                 cout << "Wrong identifier name on line "
-                << it.second - 1 << " or "  << it.second << endl;
+                << it.second << endl;
                 break;
             case WRONG_DECL:
                 cout << "Wrong syntax in declaration on line "
@@ -103,54 +103,58 @@ int error_wrapper() {
                 break;
             case WRONG_OPER:
                 cout << "Wrong operator on line "
-                << it.second - 1 << " or "  << it.second << " or no closing bracket '}'"
+                << it.second << " or no closing bracket '}'"
                 << " for 'program' operator.\n";
                 break;
             case PREV_DECL:
-                cout << "Variable is previously declared on line "
-                << it.second - 1 << " or "  << it.second << endl;
+                cout << "Variable is declared again on line "
+                << it.second << endl;
                 break;
             case STRUCT_PREV_DECL:
-                cout << "Structute type is previously declared on line "
-                << it.second - 1 << " or "  << it.second << endl;
+                cout << "Structute type is declared again on line "
+                << it.second << endl;
                 break;
             case STRUCT_NO_IDENT:
-                cout << "Structute identifier is not declared on line "
-                << it.second - 1 << " or "  << it.second << endl;
+                cout << "Structure identifier is not declared on line "
+                << it.second << endl;
                 break;
             case WRONG_IF_EXPR:
                 cout << "Wrong expression in if operator on line "
-                << it.second - 1 << " or "  << it.second << endl;
+                << it.second << endl;
                 break;
             case WRONG_READ_EXPR:
                 cout << "Wrong expression in read operator on line "
-                << it.second - 1 << " or "  << it.second << endl;
+                << it.second << endl;
                 break;
             case WRONG_WRITE_EXPR:
                 cout << "Wrong expression in write operator on line "
-                << it.second - 1 << " or "  << it.second << endl;
+                << it.second << endl;
                 break;
             case WRONG_FOR_EXPR:
                 cout << "Wrong expression if for operator on line "
-                << it.second - 1 << " or "  << it.second << endl;
+                << it.second << endl;
                 break;
             case WRONG_EXPR:
                 cout << "Wrong expression in operator on line "
-                << it.second - 1 << " or "  << it.second << endl;
+                << it.second << endl;
                 break;
             case WRONG_BR_CNT:
                 cout << "Using of operator break or continue not in cycle operators on line "
-                << it.second - 1 << " or "  << it.second << endl;
+                << it.second << endl;
                 break;
             case WRONG_GOTO_IDENT:
                 cout << "Wrong identifier in goto operator.\n";
                 break;
             case WRONG_EXPR_OP_TYPES:
                 cout << "Incompatible operand types in expression on line "
-                << it.second - 1 << " or "  << it.second << endl;
+                << it.second << endl;
                 break;
             case WRONG_WRITE_EXPR_TYPE:
                 cout << "Wrong type expression type in write operator.\n";
+                break;
+            case WRONG_DECL_AFTER_SECT:
+                cout << "Wrong declaration in operator section on line "
+                << it.second << endl;
                 break;
             case NOERROR:
                 break;
@@ -277,7 +281,9 @@ int main(int argc, char **argv) {
     error lex_err = check_lex_synt_sem_prn();
     if(lex_err != NOERROR)
         return error_wrapper();
-
+    if(!err_stk.empty())
+        return error_wrapper();
+    
     error err_interpret = interpret_prn();
     if(err_interpret != NOERROR)
         return error_wrapper();
@@ -964,6 +970,10 @@ error operator_wrapper() {
     string op = get_service_word();
     if(cycle_stack.empty() && (op == "break" || op == "continue"))
         err_stk.push_back({ WRONG_BR_CNT, cnt_lines });
+    if(service_decl.find(op) != service_decl.end()) {
+        err_stk.push_back({ WRONG_DECL_AFTER_SECT, cnt_lines });
+        return ERROR;
+    }
     ptr += op.size();
     skip_spaces_endl();
 
