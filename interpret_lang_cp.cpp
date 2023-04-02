@@ -75,10 +75,10 @@ int error_wrapper() {
                 break;
             case LEX_NO_SEMICOLON:
                 cout << "Lexical error: no ';' in the end of operator on line "
-                << it.second - 1 << " or "  << it.second << endl;
+                << it.second - 1 << endl;
                 break;
             case LEX_NO_SEMICOLON_FOR:
-                cout << "Lexical error: no ';' in the middle of operator for on line "
+                cout << "Lexical error: no ';' in the middle of operator 'for' on line "
                 << it.second - 1 << " or "  << it.second << endl;
                 break;
             case COMM_NOCLOSE:
@@ -99,7 +99,7 @@ int error_wrapper() {
                 break;
             case WRONG_DECL:
                 cout << "Wrong syntax in declaration on line "
-                << it.second - 1 << " or "  << it.second << endl;
+                << it.second - 1 << endl;
                 break;
             case WRONG_OPER:
                 cout << "Wrong operator on line "
@@ -254,9 +254,7 @@ error interpret_prn();
 1. ТЕСТИРОВАНИЕ ТОГО, ЧТО СДЕЛАНО
 2. МБ РАСПАРСИТЬ РЕКУРСИВНОЕ ВЛОЖЕНИЕ ПЕРЕМЕННЫХ СТРУКТУР,
    ЧТОБЫ ОНИ ЛЕЖАЛИ В ID_refs.
-3. ИНТЕРПРЕТАТОР
-   * ДЛЯ ИНТЕРПРЕТАЦИИ СДЕЛАТЬ ФУНКЦИЮ ВЫЧИСЛЕНИЯ ВЫРАЖЕНИЯ
-     В ПОЛИЗЕ, ВРАППЕР ДЛЯ ОПЕРАЦИЙ.
+   ПРОВЕРИТЬ НА ТО, ЧТО РАБОТА С ПОЛЯМИ СТРУКТУРЫ КОРРЕКТНА.
 */
 int main(int argc, char **argv) {
     if(argc == 1)
