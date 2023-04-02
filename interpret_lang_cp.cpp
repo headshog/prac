@@ -257,8 +257,10 @@ error interpret_prn();
    ПРОВЕРИТЬ НА ТО, ЧТО РАБОТА С ПОЛЯМИ СТРУКТУРЫ КОРРЕКТНА.
 */
 int main(int argc, char **argv) {
-    if(argc == 1)
+    if(argc == 1) {
         err_stk.push_back({ FILE_NO, 0 });
+        return error_wrapper();
+    }
 
     ifstream file(argv[1], ios::binary | ios::ate);
     streamsize size;
@@ -269,8 +271,10 @@ int main(int argc, char **argv) {
     
     file.seekg(0, ios::beg);
     buf = string(size, '0');
-    if (!file.read(buf.data(), size))
+    if (!file.read(buf.data(), size)) {
         err_stk.push_back({ FILE_BAD, 0 });
+        return error_wrapper();
+    }
     file.close();
 
     error lex_err = check_lex_synt_sem_prn();
