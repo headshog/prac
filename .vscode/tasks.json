@@ -9,6 +9,7 @@
                 "-g",
                 "-Wall",
                 "-lm",
+//                "-O3",
                 "${file}",
                 "-o",
                 "${fileDirname}/${fileBasenameNoExtension}"
