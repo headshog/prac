@@ -14,12 +14,12 @@ enum error {
     FILE_NO = -1,
     FILE_BAD = -2,
     UNIDENT_SYMBOL = -3,
-    LEX_NOPROG = -4,
-    LEX_NO_OPBRAC = -5,
-    LEX_NO_CLBRAC = -6,
-    LEX_NO_OPBRAC_PR = -7,
-    LEX_NO_SEMICOLON = -8,
-    LEX_NO_SEMICOLON_FOR = -9,
+    SYNT_NOPROG = -4,
+    SYNT_NO_OPBRAC = -5,
+    SYNT_NO_CLBRAC = -6,
+    SYNT_NO_OPBRAC_PR = -7,
+    SYNT_NO_SEMICOLON = -8,
+    SYNT_NO_SEMICOLON_FOR = -9,
     COMM_NOCLOSE = -10,
     WRONG_DECL_TYPE = -11,
     WRONG_CONST_TYPE = -12,
@@ -29,17 +29,18 @@ enum error {
     PREV_DECL = -16,
     STRUCT_PREV_DECL = -17,
     STRUCT_NO_IDENT = -18,
-    WRONG_IF_EXPR = -19,
-    WRONG_READ_EXPR = -20,
-    WRONG_WRITE_EXPR = -21,
-    WRONG_FOR_EXPR = -22,
-    WRONG_EXPR = -23,
-    WRONG_BR_CNT = -24,
-    WRONG_GOTO_IDENT = -25,
-    WRONG_EXPR_OP_TYPES = -26,
-    WRONG_WRITE_EXPR_TYPE = -27,
-    WRONG_DECL_AFTER_SECT = -28,
-    ERROR = -29
+    STRUCT_IN_STRUCT = -19,
+    WRONG_IF_EXPR = -20,
+    WRONG_READ_EXPR = -21,
+    WRONG_WRITE_EXPR = -22,
+    WRONG_FOR_EXPR = -23,
+    WRONG_EXPR = -24,
+    WRONG_BR_CNT = -25,
+    WRONG_GOTO_IDENT = -26,
+    WRONG_EXPR_OP_TYPES = -27,
+    WRONG_WRITE_EXPR_TYPE = -28,
+    WRONG_DECL_AFTER_SECT = -29,
+    ERROR = -30
 };
 size_t cnt_lines = 1, comm_offset;
 vector<pair<error, size_t>> err_stk;
@@ -60,26 +61,26 @@ int error_wrapper() {
                 cout << "Unidentified symbol found on line "
                 << it.second << endl;
                 break;
-            case LEX_NOPROG:
-                cout << "Lexical error: no word 'program' in the beginning.\n";
+            case SYNT_NOPROG:
+                cout << "Syntax error: no word 'program' in the beginning.\n";
                 break;
-            case LEX_NO_OPBRAC:
-                cout << "Lexical error: no opening bracket '{' or '(' in operator on line "
+            case SYNT_NO_OPBRAC:
+                cout << "Syntax error: no opening bracket '{' or '(' in operator on line "
                 << it.second - 1 << " or "  << it.second << endl;
                 break;
-            case LEX_NO_CLBRAC:
-                cout << "Lexical error: no closing bracket '}' or ')' in operator on line "
+            case SYNT_NO_CLBRAC:
+                cout << "Syntax error: no closing bracket '}' or ')' in operator on line "
                 << it.second - 1 << " or "  << it.second << endl;
                 break;
-            case LEX_NO_OPBRAC_PR:
-                cout << "Lexical error: no opening bracket '{' for 'program' operator" << endl;
+            case SYNT_NO_OPBRAC_PR:
+                cout << "Syntax error: no opening bracket '{' for 'program' operator" << endl;
                 break;
-            case LEX_NO_SEMICOLON:
-                cout << "Lexical error: no ';' in the end of operator on line "
+            case SYNT_NO_SEMICOLON:
+                cout << "Syntax error: no ';' in the end of operator on line "
                 << it.second - 1 << endl;
                 break;
-            case LEX_NO_SEMICOLON_FOR:
-                cout << "Lexical error: no ';' in the middle of operator 'for' on line "
+            case SYNT_NO_SEMICOLON_FOR:
+                cout << "Syntax error: no ';' in the middle of operator 'for' on line "
                 << it.second << endl;
                 break;
             case COMM_NOCLOSE:
@@ -116,6 +117,10 @@ int error_wrapper() {
                 break;
             case STRUCT_NO_IDENT:
                 cout << "Structure identifier is not declared on line "
+                << it.second << endl;
+                break;
+            case STRUCT_IN_STRUCT:
+                cout << "Structure is declared inside of structure on line "
                 << it.second << endl;
                 break;
             case WRONG_IF_EXPR:
@@ -185,7 +190,7 @@ unordered_set<string> log_ops {
 unordered_set<string> left_as_ops {
     "*", "/", "+", "-", "<", ">", "<=", ">=", "==", "!=", "and", "or"
 };
-unordered_map<string, int> prior = {
+unordered_map<string, int> prior {
     {"+!", 8}, {"-!", 8}, {"not", 8}, {"*", 7}, {"/", 7}, {"+", 6}, 
     {"-", 6}, {"<", 5}, {">", 5}, {"<=", 5}, {">=", 5}, {"==", 4}, 
     {"!=", 4}, {"and", 3}, {"or", 2}, {"=", 1}
@@ -224,14 +229,13 @@ void get_spaces_endl_back();
 error erase_comm_check();
 string get_service_word();
 string get_service_op();
-string get_identifier();
+string get_identifier(bool struct_decl = false);
 string get_mark();
 string get_value();
 
 error check_lex_synt_sem_prn();
 
 error struct_declaration(string id = "");
-
 error get_id_and_val(vector<BaseIdent>& ID, string& decl_type, string id);
 error declaration(vector<BaseIdent>& ID, string id = "");
 
@@ -359,7 +363,7 @@ string get_service_op() {
         
     return tmp_ptr < buf.size() && (service_ops.find(w) != service_ops.end()) ? w : "";
 }
-string get_identifier() {
+string get_identifier(bool struct_decl) {
     string id;
     size_t tmp_ptr = ptr;
     bool wr_symb = false;
@@ -372,8 +376,10 @@ string get_identifier() {
         }
         id += buf[tmp_ptr++];
     }
-    return !wr_symb && tmp_ptr < buf.size() && service_operators.find(id) == service_operators.end() &&
-           service_decl.find(id) == service_decl.end() ? id : "";
+    bool cond1 = !wr_symb && tmp_ptr < buf.size() && service_operators.find(id) == service_operators.end();
+    if(struct_decl)
+        return cond1 ? id : "";
+    return cond1 && service_decl.find(id) == service_decl.end() ? id : "";
 }
 string get_mark() {
     string m = get_identifier();
@@ -420,25 +426,23 @@ error check_lex_synt_sem_prn() {
 
     skip_spaces_endl();
     if(buf.size() < 7 || buf.substr(ptr, 7) != "program")
-        err_stk.push_back({ LEX_NOPROG, cnt_lines });
+        err_stk.push_back({ SYNT_NOPROG, cnt_lines });
     ptr += 7;
     skip_spaces_endl();
     if(ptr >= buf.size() || buf[ptr] != '{')
-        err_stk.push_back({ LEX_NO_OPBRAC, cnt_lines });
+        err_stk.push_back({ SYNT_NO_OPBRAC, cnt_lines });
     ptr++;
     skip_spaces_endl();
     if(ptr == buf.size())
-        err_stk.push_back({ LEX_NO_CLBRAC, cnt_lines });
+        err_stk.push_back({ SYNT_NO_CLBRAC, cnt_lines });
     if(!err_stk.empty())
         return ERROR;
     
-    error err_struct = struct_declaration();
-    if(err_struct != NOERROR)
-        return ERROR;
-
     error err_decl = declaration(ID);
     if(err_decl != NOERROR)
         return ERROR;
+    ID.clear();
+    StructDeclarations.clear();
 
     skip_spaces_endl();
     error err_operator = complex_operator();
@@ -447,13 +451,13 @@ error check_lex_synt_sem_prn() {
     
     skip_spaces_endl();
     if(ptr >= buf.size() || buf[ptr] != '}') {
-        err_stk.push_back({ LEX_NO_CLBRAC, cnt_lines });
+        err_stk.push_back({ SYNT_NO_CLBRAC, cnt_lines });
         return ERROR;
     }
     ptr++;
     skip_spaces_endl();
     if(ptr != buf.size()) {
-        err_stk.push_back({ LEX_NO_OPBRAC_PR, cnt_lines });
+        err_stk.push_back({ SYNT_NO_OPBRAC_PR, cnt_lines });
         return ERROR;
     }
     return NOERROR;
@@ -461,46 +465,50 @@ error check_lex_synt_sem_prn() {
 
 error struct_declaration(string id) {
     string decl_type = get_service_word();
-    while(decl_type == "struct") {
-        ptr += decl_type.size();
-        skip_spaces_endl();
-        string new_id = get_identifier();
-        id = id == "" ? new_id : id + "." + new_id;
-        if(!id.empty() && !StructDeclarations.insert(make_pair(id, vector<BaseIdent>())).second)
-            err_stk.push_back({ STRUCT_PREV_DECL, cnt_lines });
-        if(id.empty())
-            err_stk.push_back({ STRUCT_NO_IDENT, cnt_lines });
-        ptr += new_id.size();
-        skip_spaces_endl();
-        service_decl.insert(id);
-        StructNames.insert(id);
-
-        if(buf[ptr] != '{') {
-            err_stk.push_back({ LEX_NO_OPBRAC, cnt_lines });
-            return ERROR;
-        }
-        ptr++;
-        skip_spaces_endl();
-
-        error err_decl = declaration(StructDeclarations[id], id);
-        if(err_decl != NOERROR)
-            return ERROR;
-        skip_spaces_endl();
-        if(buf[ptr] != '}') {
-            err_stk.push_back({ LEX_NO_CLBRAC, cnt_lines });
-            return ERROR;
-        }
-        ptr++;
-        if(buf[ptr] != ';') {
-            err_stk.push_back({ LEX_NO_SEMICOLON, cnt_lines });
-            return ERROR;
-        }
-        ptr++;
-        decl_type = get_service_word();
+    ptr += decl_type.size();
+    skip_spaces_endl();
+    string new_id = get_identifier(true);
+    if(new_id != "" && !StructNames.insert(new_id).second) {
+        err_stk.push_back({ STRUCT_PREV_DECL, cnt_lines });
+        return ERROR;
     }
+    new_id = get_identifier();
+    id = id == "" ? new_id : id + "." + new_id;
+    if(id.empty())
+        err_stk.push_back({ STRUCT_NO_IDENT, cnt_lines });
+    ptr += new_id.size();
+    skip_spaces_endl();
+    service_decl.insert(id);
+    StructDeclarations[id] = vector<BaseIdent>();
+
+    if(buf[ptr] != '{') {
+        err_stk.push_back({ SYNT_NO_OPBRAC, cnt_lines });
+        return ERROR;
+    }
+    ptr++;
+    skip_spaces_endl();
+
+    size_t struct_cnt = StructNames.size();
+    error err_decl = declaration(StructDeclarations[id], id);
+    if(struct_cnt < StructNames.size()) {
+        err_stk.push_back({ STRUCT_IN_STRUCT, cnt_lines });
+        return ERROR;
+    }
+    if(err_decl != NOERROR)
+        return ERROR;
+    skip_spaces_endl();
+    if(buf[ptr] != '}') {
+        err_stk.push_back({ SYNT_NO_CLBRAC, cnt_lines });
+        return ERROR;
+    }
+    ptr++;
+    if(buf[ptr] != ';') {
+        err_stk.push_back({ SYNT_NO_SEMICOLON, cnt_lines });
+        return ERROR;
+    }
+    ptr++;
     return NOERROR;
 }
-
 error get_id_and_val(vector<BaseIdent>& ID, string& decl_type, string id) {
     string identifier, value;
     skip_spaces_endl();
@@ -565,14 +573,16 @@ error declaration(vector<BaseIdent>& ID, string id) {
         if(decl_type.empty() || service_decl.find(decl_type) == service_decl.end())
             err_stk.push_back({ WRONG_DECL_TYPE, cnt_lines });
         if(decl_type == "struct") {
-            struct_declaration(id);
+            error err_s_decl = struct_declaration(id);
+            if(err_s_decl != NOERROR)
+                return ERROR;
         }
         else {
             ptr += decl_type.size();
             if(get_id_and_val(ID, decl_type, id) != NOERROR)
                 return ERROR;
             if(buf[ptr] != ';') {
-                err_stk.push_back({ LEX_NO_SEMICOLON, cnt_lines });
+                err_stk.push_back({ SYNT_NO_SEMICOLON, cnt_lines });
                 return ERROR;
             }
             ptr++;
@@ -594,57 +604,48 @@ bool is_logical_expression(vector<BaseIdent>& expr) {
     return false;
 }
 bool is_compatible_types_expr(vector<BaseIdent>& expr) {
-    stk.clear();
+    vector<pair<string, string>> expr_stk;
     string last_operand_type;
     for(auto& it : expr) {
-        auto str_cond = StructDeclarations.find(it.type) != StructDeclarations.end();
+        auto str_cond = StructNames.find(it.type) != StructNames.end();
         if(it.type == "int" || it.type == "boolean" || it.type == "string" || str_cond)
-            stk.push_back(it.type);
+            expr_stk.push_back({ it.type, it.name });
         else if(it.type == "operation") {
-            string last_operand_type = stk.back();
-            stk.pop_back();
+            string last_operand_type = expr_stk.back().first, last_operand_name = expr_stk.back().second;
+            expr_stk.pop_back();
             if(left_as_ops.find(it.name) != left_as_ops.end() || it.name == "=") {
-                if(last_operand_type != stk.back()) {
-                    stk.clear();
+                if(last_operand_type != expr_stk.back().first)
                     return false;
-                }
                 else {
                     if(last_operand_type == "boolean" && 
                        (it.name == "+" || it.name == "-" || it.name == "+!" || 
-                        it.name == "-!" || it.name == "*" || it.name == "/")) {
-                        stk.clear();
+                        it.name == "-!" || it.name == "*" || it.name == "/"))
                         return false;
-                    }
                     else if(last_operand_type == "int" && 
-                            (it.name == "not" || it.name == "and" || it.name == "or")) {
-                        stk.clear();
+                            (it.name == "not" || it.name == "and" || it.name == "or"))
                         return false;
-                    }
                     else if(last_operand_type == "string" && 
                             (it.name != "+" && it.name != "<" && it.name != "<" &&
                              it.name != ">" && it.name == "!=" && it.name != "==" &&
-                             it.name != "=" && it.name != ">=" && it.name != "<=")) {
-                        stk.clear();
+                             it.name != "=" && it.name != ">=" && it.name != "<="))
                         return false;
-                    }
-                    else if(StructDeclarations.find(last_operand_type) != StructDeclarations.end() && 
-                            it.name != "=") {
-                        stk.clear();
+                    else if(StructNames.find(last_operand_type) != StructNames.end() && 
+                            it.name != "=")
                         return false;
-                    }
+                    else if(it.name == "=" && ID_refs.find(expr_stk.back().second) == ID_refs.end())
+                        return false;
                 }
-                last_operand_type = stk.back();
-                stk.pop_back();
+                last_operand_type = expr_stk.back().first;
+                expr_stk.pop_back();
             }
             if(it.name == "+!" || it.name == "-!" || it.name == "=" ||
                it.name == "+" || it.name == "-" || it.name == "*" ||
                it.name == "/")
-                stk.push_back(last_operand_type);
+                expr_stk.push_back({ last_operand_type, "const" });
             else
-                stk.push_back("boolean");
+                expr_stk.push_back({ "boolean", "const" });
         }
     }
-    stk.clear();
     return true;
 }
 error read_expression(vector<BaseIdent>& expr, bool is_single_expr) {
@@ -703,14 +704,12 @@ error read_expression(vector<BaseIdent>& expr, bool is_single_expr) {
             bool is_left_as = left_as_ops.find(operand) == left_as_ops.end() && !last_op;
             if(last_op && (operand == "+" || operand == "-"))
                 operand += '!';
-            bool cond = !stk.empty() && stk.back() != "(" &&
-            (is_left_as ? prior[operand] <= prior[stk.back()] : prior[operand] < prior[stk.back()]);
-            while(cond) {
+            while(!stk.empty() && stk.back() != "(" &&
+            (is_left_as ? prior[operand] <= prior[stk.back()] : prior[operand] < prior[stk.back()])) {
                 expr.emplace_back(BaseIdent());
                 expr.back().type = "operation";
                 expr.back().name = stk.back();
                 stk.pop_back();
-                cond = is_left_as ? prior[operand] <= prior[stk.back()] : prior[operand] < prior[stk.back()];
             }
             stk.emplace_back(operand);
             ptr += operand.size() - (operand.back() == '!');
@@ -729,17 +728,24 @@ error read_expression(vector<BaseIdent>& expr, bool is_single_expr) {
         expr.emplace_back(BaseIdent{ stk.back(), "operator" });
         stk.pop_back();
     }
+    if(!is_single_expr)
+        ptr--;
     return NOERROR;
 }
 error if_operator() {
     if(buf[ptr] != '(') {
-        err_stk.push_back({ LEX_NO_OPBRAC, cnt_lines });
+        err_stk.push_back({ SYNT_NO_OPBRAC, cnt_lines });
         return ERROR;
     }
 
     vector<BaseIdent> expr_arg;
     if(read_expression(expr_arg) != NOERROR)
         return ERROR;
+    if(buf[ptr] != ')') {
+        err_stk.push_back({ SYNT_NO_CLBRAC, cnt_lines });
+        return ERROR;
+    }
+    ptr++;
     expr += expr_arg;
     if(!is_logical_expression(expr_arg))
         err_stk.push_back({ WRONG_IF_EXPR, cnt_lines });
@@ -773,7 +779,7 @@ error if_operator() {
 }
 error for_operator() {
     if(buf[ptr] != '(') {
-        err_stk.push_back({ LEX_NO_OPBRAC, cnt_lines });
+        err_stk.push_back({ SYNT_NO_OPBRAC, cnt_lines });
         return ERROR;
     }
     ptr++;
@@ -782,6 +788,11 @@ error for_operator() {
     stk.emplace_back("(");
     if(read_expression(expr_arg_1) != NOERROR)
         return ERROR;
+    if(buf[ptr] != ';') {
+        err_stk.push_back({ SYNT_NO_SEMICOLON_FOR, cnt_lines });
+        return ERROR;
+    }
+    ptr++;
     if(!is_compatible_types_expr(expr_arg_1))
         err_stk.push_back({ WRONG_EXPR_OP_TYPES, cnt_lines });
 
@@ -789,6 +800,11 @@ error for_operator() {
     stk.emplace_back("(");
     if(read_expression(expr_arg_2) != NOERROR)
         return ERROR;
+    if(buf[ptr] != ';') {
+        err_stk.push_back({ SYNT_NO_SEMICOLON_FOR, cnt_lines });
+        return ERROR;
+    }
+    ptr++;
     if(!is_logical_expression(expr_arg_2))
         err_stk.push_back({ WRONG_FOR_EXPR, cnt_lines });
     if(!is_compatible_types_expr(expr_arg_2))
@@ -798,6 +814,11 @@ error for_operator() {
     stk.emplace_back("(");
     if(read_expression(expr_arg_3) != NOERROR)
         return ERROR;
+    if(buf[ptr] != ')') {
+        err_stk.push_back({ SYNT_NO_CLBRAC, cnt_lines });
+        return ERROR;
+    }
+    ptr++;
     if(!is_compatible_types_expr(expr_arg_3))
         err_stk.push_back({ WRONG_EXPR_OP_TYPES, cnt_lines });
     
@@ -829,13 +850,18 @@ error for_operator() {
 }
 error while_operator() {
     if(buf[ptr] != '(') {
-        err_stk.push_back({ LEX_NO_OPBRAC, cnt_lines });
+        err_stk.push_back({ SYNT_NO_OPBRAC, cnt_lines });
         return ERROR;
     }
     
     vector<BaseIdent> expr_arg;
     if(read_expression(expr_arg) != NOERROR)
         return ERROR;
+    if(buf[ptr] != ')') {
+        err_stk.push_back({ SYNT_NO_CLBRAC, cnt_lines });
+        return ERROR;
+    }
+    ptr++;
     if(!is_logical_expression(expr_arg))
         err_stk.push_back({ WRONG_FOR_EXPR, cnt_lines });
     if(!is_compatible_types_expr(expr_arg))
@@ -886,7 +912,7 @@ error goto_operator() {
 }
 error read_operator() {
     if(buf[ptr] != '(') {
-        err_stk.push_back({ LEX_NO_OPBRAC, cnt_lines });
+        err_stk.push_back({ SYNT_NO_OPBRAC, cnt_lines });
         return ERROR;
     }
     ptr++;
@@ -897,7 +923,7 @@ error read_operator() {
     ptr += id.size();
     skip_spaces_endl();
     if(buf[ptr] != ')') {
-        err_stk.push_back({ LEX_NO_CLBRAC, cnt_lines });
+        err_stk.push_back({ SYNT_NO_CLBRAC, cnt_lines });
         return ERROR;
     }
     ptr++;
@@ -908,24 +934,31 @@ error read_operator() {
 }
 error write_operator() {
     if(buf[ptr] != '(') {
-        err_stk.push_back({ LEX_NO_OPBRAC, cnt_lines });
+        err_stk.push_back({ SYNT_NO_OPBRAC, cnt_lines });
         return ERROR;
     }
     int args_cnt = 0;
-    while(ptr < buf.size() && buf[ptr] != ';') {
+    while(ptr < buf.size()) {
         ptr++;
         vector<BaseIdent> expr_arg_i;
         stk.emplace_back("(");
         if(read_expression(expr_arg_i) != NOERROR)
             return ERROR;
+        if(buf[ptr] != ')' && buf[ptr] != ',') {
+            err_stk.push_back({ WRONG_WRITE_EXPR, cnt_lines });
+            return ERROR;
+        }
+        ptr++;
         if(!is_compatible_types_expr(expr_arg_i))
             err_stk.push_back({ WRONG_EXPR_OP_TYPES, cnt_lines });
 
         expr += expr_arg_i;
         args_cnt++;
+        if(buf[ptr - 1] == ')')
+            break;
     }
     if(ptr >= buf.size()) {
-        err_stk.push_back({ LEX_NO_SEMICOLON, cnt_lines });
+        err_stk.push_back({ SYNT_NO_SEMICOLON, cnt_lines });
         return ERROR;
     }
 
@@ -935,7 +968,7 @@ error write_operator() {
 error expr_operator() {
     stk.emplace_back("(");
     vector<BaseIdent> expr_op;
-    error err_expr = read_expression(expr_op, true);
+    error err_expr = read_expression(expr_op);
     if(!is_compatible_types_expr(expr_op))
         err_stk.push_back({ WRONG_EXPR_OP_TYPES, cnt_lines });
     expr += expr_op;
@@ -981,7 +1014,7 @@ error operator_wrapper() {
     if(op == "{") {
         err_op = complex_operator();
         if(buf[ptr] != '}') {
-            err_stk.push_back({ LEX_NO_CLBRAC, cnt_lines });
+            err_stk.push_back({ SYNT_NO_CLBRAC, cnt_lines });
             return ERROR;
         }
     }
@@ -1001,21 +1034,21 @@ error operator_wrapper() {
     else if(op == "goto") {
         err_op = goto_operator();
         if(buf[ptr] != ';') {
-            err_stk.push_back({ LEX_NO_SEMICOLON, cnt_lines });
+            err_stk.push_back({ SYNT_NO_SEMICOLON, cnt_lines });
             return ERROR;
         }
     }
     else if(op == "read") {
         err_op = read_operator();
         if(buf[ptr] != ';') {
-            err_stk.push_back({ LEX_NO_SEMICOLON, cnt_lines });
+            err_stk.push_back({ SYNT_NO_SEMICOLON, cnt_lines });
             return ERROR;
         }
     }
     else if(op == "write") {
         err_op = write_operator();
         if(buf[ptr] != ';') {
-            err_stk.push_back({ LEX_NO_SEMICOLON, cnt_lines });
+            err_stk.push_back({ SYNT_NO_SEMICOLON, cnt_lines });
             return ERROR;
         }
     }
@@ -1035,7 +1068,7 @@ error operator_wrapper() {
         return ERROR;
     
     if(buf[ptr] != '}' && buf[ptr] != ';') {
-        err_stk.push_back({ LEX_NO_SEMICOLON, cnt_lines });
+        err_stk.push_back({ SYNT_NO_SEMICOLON, cnt_lines });
         return ERROR;
     }
     return NOERROR;
@@ -1073,8 +1106,28 @@ error interpret_prn() {
                 else if(it.name == "=") {
                     auto& op1 = prn_stk[prn_stk.size() - 2];
                     op1.val = prn_stk.back().val;
-                    if(op1.name != "const")
+                    if(op1.name != "const") {
                         ID_refs[op1.name].val = prn_stk.back().val;
+                        size_t pos;
+                        if(StructNames.find(op1.type) != StructNames.end()) {
+                            auto& lines = get<vector<BaseIdent>>(ID_refs[op1.name].val);
+                            auto& values = get<vector<BaseIdent>>(prn_stk.back().val);
+                            for(size_t i = 0; i < lines.size(); i++) {
+                                string name = op1.name + "." + lines[i].name;
+                                ID_refs[name].val = values[i].val;
+                            }
+                        }
+                        else if((pos = op1.name.find('.')) != op1.name.npos) {
+                            string s_name = op1.name.substr(0, pos - 1);
+                            string line = op1.name.substr(pos + 1, op1.name.size() - pos - 1);
+                            auto& lines = get<vector<BaseIdent>>(ID_refs[s_name].val);
+                            for(auto& line_name : lines)
+                                if(line_name.name == line) {
+                                    line_name.val = ID_refs[op1.name].val;
+                                    break;
+                                }
+                        }
+                    }
                 }
                 prn_stk.pop_back();
             }
