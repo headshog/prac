@@ -257,9 +257,8 @@ error interpret_prn();
 /*  
 СДЕЛАТЬ:
 1. ТЕСТИРОВАНИЕ ТОГО, ЧТО СДЕЛАНО
-2. МБ РАСПАРСИТЬ РЕКУРСИВНОЕ ВЛОЖЕНИЕ ПЕРЕМЕННЫХ СТРУКТУР,
-   ЧТОБЫ ОНИ ЛЕЖАЛИ В ID_refs.
-   ПРОВЕРИТЬ НА ТО, ЧТО РАБОТА С ПОЛЯМИ СТРУКТУРЫ КОРРЕКТНА.
+2. ДОДЕЛАТЬ ФУНКЦИЮ READ ДЛЯ ПОЛЕЙ СТРУКТУРЫ
+   ЗАПИСЫВАТЬ ВНУТРЬ СТРУКТУРЫ СЧИТАННУЮ ИНФОРМАЦИЮ
 */
 int main(int argc, char **argv) {
     if(argc == 1) {
@@ -696,7 +695,7 @@ error read_expression(vector<BaseIdent>& expr, bool is_single_expr) {
             if(it.second)
                 err_stk.push_back({ WRONG_IDENT_NAME, cnt_lines });
             auto elem = it.first->second;
-            expr.emplace_back(BaseIdent{ elem.name, elem.type, elem.val });
+            expr.emplace_back(BaseIdent{ operand, elem.type, elem.val });
             ptr += operand.size();
             last_op = false;
         }
@@ -928,7 +927,7 @@ error read_operator() {
     }
     ptr++;
 
-    expr.emplace_back(ID_refs[id]);
+    expr.emplace_back(BaseIdent{ id, ID_refs[id].type, ID_refs[id].val });
     expr.emplace_back(BaseIdent{ "read", "operator" });
     return NOERROR;
 }
@@ -1083,7 +1082,7 @@ error interpret_prn() {
             if(it.name == "const")
                 prn_stk.emplace_back(it);
             else
-                prn_stk.emplace_back(ID_refs[it.name]);
+                prn_stk.emplace_back(BaseIdent{ it.name, ID_refs[it.name].type, ID_refs[it.name].val });
         }
         else if(it.type == "operation") {
             if(log_ops.find(it.name) == log_ops.end()) {
@@ -1118,7 +1117,7 @@ error interpret_prn() {
                             }
                         }
                         else if((pos = op1.name.find('.')) != op1.name.npos) {
-                            string s_name = op1.name.substr(0, pos - 1);
+                            string s_name = op1.name.substr(0, pos);
                             string line = op1.name.substr(pos + 1, op1.name.size() - pos - 1);
                             auto& lines = get<vector<BaseIdent>>(ID_refs[s_name].val);
                             for(auto& line_name : lines)
@@ -1245,6 +1244,17 @@ error interpret_prn() {
                     cin >> get<string>(ID_refs[op.name].val);
                 else if(op.type == "boolean")
                     cin >> get<bool>(ID_refs[op.name].val);
+                size_t pos;
+                if((pos = op.name.find('.')) != op.name.npos) {
+                    string s_name = op.name.substr(0, pos);
+                    string line = op.name.substr(pos + 1, op.name.size() - pos - 1);
+                    auto& lines = get<vector<BaseIdent>>(ID_refs[s_name].val);
+                    for(auto& line_name : lines)
+                        if(line_name.name == line) {
+                            line_name.val = ID_refs[op.name].val;
+                            break;
+                        }
+                }
                 prn_stk.pop_back();
             }
         }
