@@ -265,12 +265,6 @@ error operator_wrapper();
 
 error interpret_prn();
 
-/*  
-СДЕЛАТЬ:
-1. ТЕСТИРОВАНИЕ ТОГО, ЧТО СДЕЛАНО
-2. ДОДЕЛАТЬ ФУНКЦИЮ READ ДЛЯ ПОЛЕЙ СТРУКТУРЫ
-   ЗАПИСЫВАТЬ ВНУТРЬ СТРУКТУРЫ СЧИТАННУЮ ИНФОРМАЦИЮ
-*/
 int main(int argc, char **argv) {
     if(argc == 1) {
         err_stk.push_back({ FILE_NO, 0 });
