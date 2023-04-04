@@ -42,14 +42,25 @@ enum error {
     WRONG_DECL_AFTER_SECT = -29,
     ERROR = -30
 };
-size_t cnt_lines = 1, comm_offset;
+size_t cnt_lines = 1;
 vector<pair<error, size_t>> err_stk;
+vector<pair<size_t, size_t>> comm_offset;
+
+size_t get_line(size_t num_line) {
+    size_t sum_offset = 0;
+    for(auto it: comm_offset)
+           if(it.first < num_line)
+                  sum_offset += it.second;
+           else
+                  break;
+    return num_line + sum_offset;
+}
 
 int error_wrapper() {
     bool is_err = err_stk.empty();
     for(auto it : err_stk) {
         error e = it.first;
-        it.second += comm_offset;
+        size_t line = get_line(it.second);
         switch (e) {
             case FILE_NO:
                 cout << "No filename given.\n";
@@ -59,107 +70,107 @@ int error_wrapper() {
                 break;
             case UNIDENT_SYMBOL:
                 cout << "Unidentified symbol found on line "
-                << it.second << endl;
+                << line << endl;
                 break;
             case SYNT_NOPROG:
                 cout << "Syntax error: no word 'program' in the beginning.\n";
                 break;
             case SYNT_NO_OPBRAC:
                 cout << "Syntax error: no opening bracket '{' or '(' in operator on line "
-                << it.second - 1 << " or "  << it.second << endl;
+                << line - 1 << " or "  << line << endl;
                 break;
             case SYNT_NO_CLBRAC:
                 cout << "Syntax error: no closing bracket '}' or ')' in operator on line "
-                << it.second - 1 << " or "  << it.second << endl;
+                << line - 1 << " or "  << line << endl;
                 break;
             case SYNT_NO_OPBRAC_PR:
                 cout << "Syntax error: no opening bracket '{' for 'program' operator" << endl;
                 break;
             case SYNT_NO_SEMICOLON:
                 cout << "Syntax error: no ';' in the end of operator on line "
-                << it.second - 1 << endl;
+                << line - 1 << endl;
                 break;
             case SYNT_NO_SEMICOLON_FOR:
                 cout << "Syntax error: no ';' in the middle of operator 'for' on line "
-                << it.second << endl;
+                << line << endl;
                 break;
             case COMM_NOCLOSE:
                 cout << "Comment is not closed on line ";
                 break;
             case WRONG_DECL_TYPE:
                 cout << "Wrong declaration type on line: "
-                << it.second << endl;
+                << line << endl;
                 break;
             case WRONG_CONST_TYPE:
                 cout << "Constant type does not match the variable type on line "
-                << it.second << endl;
+                << line << endl;
                 break;
             case WRONG_IDENT_NAME:
                 cout << "Wrong identifier name on line "
-                << it.second << endl;
+                << line << endl;
                 break;
             case WRONG_DECL:
                 cout << "Wrong syntax in declaration on line "
-                << it.second - 1 << endl;
+                << line - 1 << endl;
                 break;
             case WRONG_OPER:
                 cout << "Wrong operator on line "
-                << it.second << " or no closing bracket '}'"
+                << line << " or no closing bracket '}'"
                 << " for 'program' operator.\n";
                 break;
             case PREV_DECL:
                 cout << "Variable is declared again on line "
-                << it.second << endl;
+                << line << endl;
                 break;
             case STRUCT_PREV_DECL:
                 cout << "Structute type is declared again on line "
-                << it.second << endl;
+                << line << endl;
                 break;
             case STRUCT_NO_IDENT:
                 cout << "Structure identifier is not declared on line "
-                << it.second << endl;
+                << line << endl;
                 break;
             case STRUCT_IN_STRUCT:
                 cout << "Structure is declared inside of structure on line "
-                << it.second << endl;
+                << line << endl;
                 break;
             case WRONG_IF_EXPR:
                 cout << "Wrong expression in if operator on line "
-                << it.second << endl;
+                << line << endl;
                 break;
             case WRONG_READ_EXPR:
                 cout << "Wrong expression in read operator on line "
-                << it.second << endl;
+                << line << endl;
                 break;
             case WRONG_WRITE_EXPR:
                 cout << "Wrong expression in write operator on line "
-                << it.second << endl;
+                << line << endl;
                 break;
             case WRONG_FOR_EXPR:
                 cout << "Wrong expression if for operator on line "
-                << it.second << endl;
+                << line << endl;
                 break;
             case WRONG_EXPR:
                 cout << "Wrong expression in operator on line "
-                << it.second << endl;
+                << line << endl;
                 break;
             case WRONG_BR_CNT:
                 cout << "Using of operator break or continue not in cycle operators on line "
-                << it.second << endl;
+                << line << endl;
                 break;
             case WRONG_GOTO_IDENT:
                 cout << "Wrong identifier in goto operator.\n";
                 break;
             case WRONG_EXPR_OP_TYPES:
                 cout << "Incompatible operand types in expression on line "
-                << it.second << endl;
+                << line << endl;
                 break;
             case WRONG_WRITE_EXPR_TYPE:
                 cout << "Wrong type expression type in write operator.\n";
                 break;
             case WRONG_DECL_AFTER_SECT:
                 cout << "Wrong declaration in operator section on line "
-                << it.second << endl;
+                << line << endl;
                 break;
             case NOERROR:
                 break;
@@ -308,9 +319,10 @@ void get_spaces_endl_back() {
 }
 error erase_comm_check() {
     string tmp_buf;
+    size_t comm_offset_cur = 0;
     bool add_symb = true, str = false;
     for(size_t i = 0; i < buf.size(); i++) {
-        cnt_lines += buf[i] == '\n';
+        cnt_lines += buf[i] == '\n' && add_symb;
         if(add_symb && buf[i] == '\"')
             str = !str;
         
@@ -321,13 +333,18 @@ error erase_comm_check() {
         }
 
         if(!str && buf[i] == '/' && i + 1 != buf.size() && buf[i + 1] == '*')
-            add_symb = false, i += 2;
+            add_symb = false, i++;
         else if(!add_symb) {
-            comm_offset += buf[i] == '\n';
+            comm_offset_cur += buf[i] == '\n';
             if(i + 1 == buf.size())
                 err_stk.push_back({ COMM_NOCLOSE, cnt_lines });
-            if(buf[i] == '*' && buf[i + 1] == '/')
-                add_symb = true, i++;
+            if(buf[i] == '*' && buf[i + 1] == '/') {
+                add_symb = true;
+                i++;
+                if(comm_offset_cur)
+                    comm_offset.push_back({ cnt_lines, comm_offset_cur });
+                comm_offset_cur = 0;
+            }
         }
         else if(add_symb)
             tmp_buf += buf[i];
@@ -917,7 +934,8 @@ error read_operator() {
     ptr++;
     skip_spaces_endl();
     string id = get_identifier();
-    if(id.empty() || ID_refs.insert(make_pair(id, BaseIdent())).second)
+    if(id.empty() || ID_refs.insert(make_pair(id, BaseIdent())).second ||
+       StructNames.find(ID_refs[id].type) != StructNames.end())
         err_stk.push_back({ WRONG_IDENT_NAME, cnt_lines });
     ptr += id.size();
     skip_spaces_endl();
