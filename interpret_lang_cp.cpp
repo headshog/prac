@@ -688,7 +688,8 @@ error read_expression(vector<BaseIdent>& expr, bool is_single_expr) {
             ptr += operand.size() + cnt_slash;
             last_op = false;
         }
-        else if((operand = get_identifier()) != "") {
+        else if((operand = get_identifier()) != "" &&
+                (log_ops.find(operand) == log_ops.end())) {
             auto it = ID_refs.insert(make_pair(operand, BaseIdent()));
             if(it.second)
                 err_stk.push_back({ WRONG_IDENT_NAME, cnt_lines });
@@ -698,7 +699,7 @@ error read_expression(vector<BaseIdent>& expr, bool is_single_expr) {
             last_op = false;
         }
         else if((operand = get_service_op()) != "") {
-            bool is_left_as = left_as_ops.find(operand) == left_as_ops.end() && !last_op;
+            bool is_left_as = left_as_ops.find(operand) != left_as_ops.end() && !last_op;
             if(last_op && (operand == "+" || operand == "-"))
                 operand += '!';
             while(!stk.empty() && stk.back() != "(" &&
