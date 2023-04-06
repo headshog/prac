@@ -58,48 +58,49 @@ int error_wrapper() {
                 break;
             case UNIDENT_SYMBOL:
                 cout << "Unidentified symbol found on line "
-                << it.second << endl;
+                << it.second << endl << endl;
                 break;
             case SYNT_NOPROG:
                 cout << "Syntax error: no word 'program' in the beginning.\n";
                 break;
             case SYNT_NO_OPBRAC:
                 cout << "Syntax error: no opening bracket '{' or '(' in operator on line "
-                << it.second - 1 << " or "  << it.second << endl;
+                << it.second - 1 << " or "  << it.second << endl << endl;
                 break;
             case SYNT_NO_CLBRAC:
                 cout << "Syntax error: no closing bracket '}' or ')' in operator on line "
-                << it.second - 1 << " or "  << it.second << endl;
+                << it.second - 1 << " or "  << it.second << endl << endl;
                 break;
             case SYNT_NO_OPBRAC_PR:
-                cout << "Syntax error: no opening bracket '{' for 'program' operator" << endl;
+                cout << "Syntax error: no opening bracket '{' for 'program' operator" << endl << endl;
                 break;
             case SYNT_NO_SEMICOLON:
                 cout << "Syntax error: no ';' in the end of operator on line "
-                << it.second - 1 << endl;
+                << it.second - 1 << "\nOr wrong syntax of operator on line "
+                << it.second << endl << endl;
                 break;
             case SYNT_NO_SEMICOLON_FOR:
                 cout << "Syntax error: no ';' in the middle of operator 'for' on line "
-                << it.second << endl;
+                << it.second << endl << endl;
                 break;
             case COMM_NOCLOSE:
                 cout << "Comment is not closed on line ";
                 break;
             case WRONG_DECL_TYPE:
                 cout << "Wrong declaration type on line: "
-                << it.second << endl;
+                << it.second << endl << endl;
                 break;
             case WRONG_CONST_TYPE:
                 cout << "Constant type does not match the variable type on line "
-                << it.second << endl;
+                << it.second << endl << endl;
                 break;
             case WRONG_IDENT_NAME:
                 cout << "Wrong identifier name on line "
-                << it.second << endl;
+                << it.second << endl << endl;
                 break;
             case WRONG_DECL:
                 cout << "Wrong syntax in declaration on line "
-                << it.second - 1 << endl;
+                << it.second - 1 << endl << endl;
                 break;
             case WRONG_OPER:
                 cout << "Wrong operator on line "
@@ -108,57 +109,57 @@ int error_wrapper() {
                 break;
             case PREV_DECL:
                 cout << "Variable is declared again on line "
-                << it.second << endl;
+                << it.second << endl << endl;
                 break;
             case STRUCT_PREV_DECL:
                 cout << "Structute type is declared again on line "
-                << it.second << endl;
+                << it.second << endl << endl;
                 break;
             case STRUCT_NO_IDENT:
                 cout << "Structure identifier is not declared on line "
-                << it.second << endl;
+                << it.second << endl << endl;
                 break;
             case STRUCT_IN_STRUCT:
                 cout << "Structure is declared inside of structure on line "
-                << it.second << endl;
+                << it.second << endl << endl;
                 break;
             case WRONG_IF_EXPR:
                 cout << "Wrong expression in if operator on line "
-                << it.second << endl;
+                << it.second << endl << endl;
                 break;
             case WRONG_READ_EXPR:
                 cout << "Wrong expression in read operator on line "
-                << it.second << endl;
+                << it.second << endl << endl;
                 break;
             case WRONG_WRITE_EXPR:
                 cout << "Wrong expression in write operator on line "
-                << it.second << endl;
+                << it.second << endl << endl;
                 break;
             case WRONG_FOR_EXPR:
                 cout << "Wrong expression if for operator on line "
-                << it.second << endl;
+                << it.second << endl << endl;
                 break;
             case WRONG_EXPR:
                 cout << "Wrong expression in operator on line "
-                << it.second << endl;
+                << it.second << endl << endl;
                 break;
             case WRONG_BR_CNT:
                 cout << "Using of operator break or continue not in cycle operators on line "
-                << it.second << endl;
+                << it.second << endl << endl;
                 break;
             case WRONG_GOTO_IDENT:
                 cout << "Wrong identifier in goto operator.\n";
                 break;
             case WRONG_EXPR_OP_TYPES:
                 cout << "Incompatible operand types in expression on line "
-                << it.second << endl;
+                << it.second << endl << endl;
                 break;
             case WRONG_WRITE_EXPR_TYPE:
                 cout << "Wrong type expression type in write operator.\n";
                 break;
             case WRONG_DECL_AFTER_SECT:
                 cout << "Wrong declaration in operator section on line "
-                << it.second << endl;
+                << it.second << endl << endl;
                 break;
             case NOERROR:
                 break;
@@ -1092,9 +1093,11 @@ error interpret_prn() {
                     get<int>(prn_stk[prn_stk.size() - 2].val) *= get<int>(prn_stk.back().val);
                 else if(it.name == "/")
                     get<int>(prn_stk[prn_stk.size() - 2].val) /= get<int>(prn_stk.back().val);
+                else if(it.name == "+!")
+                    prn_stk.push_back(BaseIdent());
                 else if(it.name == "-!") {
                     get<int>(prn_stk.back().val) *= -1;
-                    prn_stk.push_back(BaseIdent());   
+                    prn_stk.push_back(BaseIdent());
                 }
                 else if(it.name == "+") {
                     if(prn_stk.back().type == "int")
