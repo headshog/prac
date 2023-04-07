@@ -807,7 +807,7 @@ error for_operator() {
         return ERROR;
     }
     ptr++;
-    if(!is_logical_expression(expr_arg_2))
+    if(!expr_arg_2.empty() && !is_logical_expression(expr_arg_2))
         err_stk.push_back({ WRONG_FOR_EXPR, cnt_lines });
     if(!is_compatible_types_expr(expr_arg_2))
         err_stk.push_back({ WRONG_EXPR_OP_TYPES, cnt_lines });
@@ -827,7 +827,10 @@ error for_operator() {
     size_t jmp_start = expr.size();
     expr += expr_arg_1;
     size_t jmp_cycle = expr.size();
-    expr += expr_arg_2;
+    if(!expr_arg_2.empty())
+        expr += expr_arg_2;
+    else
+        expr.emplace_back(BaseIdent{ "const", "boolean", true });
     expr.emplace_back(BaseIdent{ "jumpif", "operator", 0 });
     size_t jmp_if = expr.size() - 1;
     
