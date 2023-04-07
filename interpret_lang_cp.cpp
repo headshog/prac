@@ -68,8 +68,8 @@ int error_wrapper() {
                 << it.second - 1 << " or "  << it.second << endl << endl;
                 break;
             case SYNT_NO_CLBRAC:
-                cout << "Syntax error: no closing bracket '}' or ')' in operator on line "
-                << it.second - 1 << " or "  << it.second << endl << endl;
+                cout << "Syntax error: no closing bracket '}' or ')' in operator "
+                << "\nor wrong syntax of operator on line " << it.second << endl << endl;
                 break;
             case SYNT_NO_OPBRAC_PR:
                 cout << "Syntax error: no opening bracket '{' for 'program' operator" << endl << endl;
@@ -158,7 +158,7 @@ int error_wrapper() {
                 cout << "Wrong type expression type in write operator.\n";
                 break;
             case WRONG_DECL_AFTER_SECT:
-                cout << "Wrong declaration in operator section on line "
+                cout << "Wrong declaration inside of operator section on line "
                 << it.second << endl << endl;
                 break;
             case NOERROR:
@@ -567,6 +567,8 @@ error get_id_and_val(vector<BaseIdent>& ID, string& decl_type, string id) {
 error declaration(vector<BaseIdent>& ID, string id) {
     skip_spaces_endl();
     string decl_type = get_service_word();
+    if(get_value() != "")
+        return NOERROR;
     while(service_operators.find(decl_type) == service_operators.end()) {
         if(decl_type.empty() || service_decl.find(decl_type) == service_decl.end())
             err_stk.push_back({ WRONG_DECL_TYPE, cnt_lines });
@@ -587,7 +589,8 @@ error declaration(vector<BaseIdent>& ID, string id) {
         }
         skip_spaces_endl();
         string expr_op = get_identifier();
-        if(!expr_op.empty() && !ID_refs.insert(make_pair(expr_op, BaseIdent())).second)
+        if((!expr_op.empty() && !ID_refs.insert(make_pair(expr_op, BaseIdent())).second) ||
+           (get_value() != ""))
             break;
         decl_type = get_service_word();
     }
