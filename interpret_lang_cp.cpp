@@ -200,7 +200,7 @@ unordered_set<char> service_alf {
     '(', ')', '{', '}', '/', '\"', '\\'
 };
 unordered_set<char> ident_stop {
-    ' ', ';', '=', '\n', '\t', ')', '<', '>', '!', '+', '-', '*', ':', ','
+    ' ', ';', '=', '\n', '\t', ')', '<', '>', '!', '+', '-', '*', ':', ',', '{'
 };
 
 /* Structures for semantic checking and parsing to */
@@ -344,8 +344,11 @@ string get_service_word() {
     string w;
     size_t tmp_ptr = ptr;
     while(tmp_ptr < buf.size() && buf[tmp_ptr] != ' ' && buf[tmp_ptr] != '\n' && 
-          buf[tmp_ptr] != '(' && buf[tmp_ptr] != ';' && buf[tmp_ptr] != '\t')
+          buf[tmp_ptr] != '(' && buf[tmp_ptr] != ';' && buf[tmp_ptr] != '\t') {
         w += buf[tmp_ptr++];
+        if(buf[tmp_ptr - 1] == '{')
+            break;
+    }
     return tmp_ptr <= buf.size() && (service_operators.find(w) != service_operators.end() ||
                                      service_decl.find(w) != service_decl.end()) ? w : "";
 }
@@ -651,7 +654,7 @@ bool is_compatible_types_expr(vector<BaseIdent>& expr) {
 }
 error read_expression(vector<BaseIdent>& expr, bool is_single_expr) {
     string operand;
-    bool last_op = true;
+    bool last_op = true, last_ident = false;
     while(ptr < buf.size()) {
         skip_spaces_endl();
         if(buf[ptr] == '(')
@@ -669,7 +672,7 @@ error read_expression(vector<BaseIdent>& expr, bool is_single_expr) {
             if(!is_single_expr || (is_single_expr && buf[ptr] != ';'))
                 ptr++;
         }
-        else if((operand = get_value()) != "") {
+        else if(!last_ident && (operand = get_value()) != "") {
             expr.emplace_back(BaseIdent());
             expr.back().name = "const";
             size_t cnt_slash = 0;
@@ -691,6 +694,7 @@ error read_expression(vector<BaseIdent>& expr, bool is_single_expr) {
                 err_stk.push_back({ WRONG_CONST_TYPE, cnt_lines });
             ptr += operand.size() + cnt_slash;
             last_op = false;
+            last_ident = true;
         }
         else if((operand = get_identifier()) != "" &&
                 (log_ops.find(operand) == log_ops.end())) {
@@ -701,6 +705,7 @@ error read_expression(vector<BaseIdent>& expr, bool is_single_expr) {
             expr.emplace_back(BaseIdent{ operand, elem.type, elem.val });
             ptr += operand.size();
             last_op = false;
+            last_ident = true;
         }
         else if((operand = get_service_op()) != "") {
             bool is_left_as = left_as_ops.find(operand) != left_as_ops.end() && !last_op;
@@ -716,6 +721,7 @@ error read_expression(vector<BaseIdent>& expr, bool is_single_expr) {
             stk.emplace_back(operand);
             ptr += operand.size() - (operand.back() == '!');
             last_op = true;
+            last_ident = false;
         }
         else {
             err_stk.push_back({ WRONG_EXPR, cnt_lines });
@@ -943,9 +949,10 @@ error write_operator() {
         err_stk.push_back({ SYNT_NO_OPBRAC, cnt_lines });
         return ERROR;
     }
+    ptr++;
     int args_cnt = 0;
     while(ptr < buf.size()) {
-        ptr++;
+        skip_spaces_endl();
         vector<BaseIdent> expr_arg_i;
         stk.emplace_back("(");
         if(read_expression(expr_arg_i) != NOERROR)
@@ -954,9 +961,9 @@ error write_operator() {
             err_stk.push_back({ WRONG_WRITE_EXPR, cnt_lines });
             return ERROR;
         }
-        ptr++;
         if(!is_compatible_types_expr(expr_arg_i))
             err_stk.push_back({ WRONG_EXPR_OP_TYPES, cnt_lines });
+        ptr++;
 
         expr += expr_arg_i;
         args_cnt++;
