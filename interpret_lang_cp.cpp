@@ -529,7 +529,7 @@ error get_id_and_val(vector<BaseIdent>& ID, string& decl_type, string id) {
         }
     }
     else if(decl_type == "string")
-        ID.back().val = "";
+        ID.back().val = string();
     else if(decl_type == "int")
         ID.back().val = 0;
     else if(decl_type == "boolean")
