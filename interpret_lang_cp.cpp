@@ -1225,11 +1225,11 @@ error interpret_prn() {
                         auto& v = get<vector<BaseIdent>>(op.val);
                         for(auto& s_it : v) {
                             if(s_it.type == "int")
-                                cout << op.name << ": " << get<int>(op.val) << endl;
+                                cout << s_it.name << ": " << get<int>(s_it.val) << endl;
                             else if(s_it.type == "string")
-                                cout << op.name << ": " << get<string>(op.val) << endl;
+                                cout << s_it.name << ": " << get<string>(s_it.val) << endl;
                             else if(s_it.type == "boolean")
-                                cout << op.name << ": " << get<bool>(op.val) << endl;
+                                cout << s_it.name << ": " << get<bool>(s_it.val) << endl;
                         }
                     }
                     else {
