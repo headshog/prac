@@ -11,3 +11,16 @@ interpret_lang_cp_1.cpp
 tests/test3_bad.txt
 tests/test1_bad.txt
 tests/test8.txt
+tests/test9.txt
+tests/test10.txt
+tests/test11.txt
+tests/test12.txt
+tests/test13.txt
+tests/test9_bad.txt
+tests/test10_bad.txt
+tests/test11_bad.txt
+tests/test12_bad.txt
+tests/test13_bad.txt
+tests/test14_bad.txt
+tests/test16.txt
+tests/test15_bad.txt

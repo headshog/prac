@@ -428,12 +428,16 @@ error check_lex_synt_sem_prn() {
         return ERROR;
 
     skip_spaces_endl();
-    if(buf.size() < 7 || buf.substr(ptr, 7) != "program")
+    if(buf.size() < 7 || buf.substr(ptr, 7) != "program") {
         err_stk.push_back({ SYNT_NOPROG, cnt_lines });
+        return ERROR;
+    }
     ptr += 7;
     skip_spaces_endl();
-    if(ptr >= buf.size() || buf[ptr] != '{')
+    if(ptr >= buf.size() || buf[ptr] != '{') {
         err_stk.push_back({ SYNT_NO_OPBRAC, cnt_lines });
+        return ERROR;
+    }
     ptr++;
     skip_spaces_endl();
     if(ptr == buf.size())
@@ -449,6 +453,10 @@ error check_lex_synt_sem_prn() {
 
     skip_spaces_endl();
     error err_operator = complex_operator();
+    for(auto& it : GotoToMark)
+        if(get<int>(expr[it.second].val) == -1)
+            err_stk.push_back({ WRONG_GOTO_IDENT, 0 });
+
     if(err_operator != NOERROR)
         return ERROR;
     
@@ -907,7 +915,7 @@ error goto_operator() {
     if(id.empty())
         err_stk.push_back({ WRONG_IDENT_NAME, cnt_lines });
     
-    expr.emplace_back(BaseIdent{ "jump", "operator", 0 });
+    expr.emplace_back(BaseIdent{ "jump", "operator", -1 });
     size_t jmp = expr.size() - 1;
 
     bool is_mark_found = false;
