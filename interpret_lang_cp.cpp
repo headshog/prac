@@ -632,7 +632,7 @@ bool is_compatible_types_expr(vector<BaseIdent>& expr) {
                         return false;
                     else if(last_operand_type == "string" && 
                             (it.name != "+" && it.name != "<" && it.name != "<" &&
-                             it.name != ">" && it.name == "!=" && it.name != "==" &&
+                             it.name != ">" && it.name != "!=" && it.name != "==" &&
                              it.name != "=" && it.name != ">=" && it.name != "<="))
                         return false;
                     else if(StructNames.find(last_operand_type) != StructNames.end() && 
@@ -959,7 +959,7 @@ error write_operator() {
         stk.emplace_back("(");
         if(read_expression(expr_arg_i) != NOERROR)
             return ERROR;
-        if(buf[ptr] != ')' && buf[ptr] != ',') {
+        if((buf[ptr] != ')' && buf[ptr] != ',') || expr_arg_i.empty()) {
             err_stk.push_back({ WRONG_WRITE_EXPR, cnt_lines });
             return ERROR;
         }

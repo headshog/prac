@@ -10,3 +10,4 @@ interpret_lang_cp_1
 interpret_lang_cp_1.cpp
 tests/test3_bad.txt
 tests/test1_bad.txt
+tests/test8.txt
