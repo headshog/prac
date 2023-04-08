@@ -343,12 +343,12 @@ error erase_comm_check() {
 string get_service_word() {
     string w;
     size_t tmp_ptr = ptr;
+    if(buf[tmp_ptr] == '{')
+        return "{";
     while(tmp_ptr < buf.size() && buf[tmp_ptr] != ' ' && buf[tmp_ptr] != '\n' && 
-          buf[tmp_ptr] != '(' && buf[tmp_ptr] != ';' && buf[tmp_ptr] != '\t') {
+          buf[tmp_ptr] != '(' && buf[tmp_ptr] != ';' && buf[tmp_ptr] != '\t' &&
+          buf[tmp_ptr] != '{')
         w += buf[tmp_ptr++];
-        if(buf[tmp_ptr - 1] == '{')
-            break;
-    }
     return tmp_ptr <= buf.size() && (service_operators.find(w) != service_operators.end() ||
                                      service_decl.find(w) != service_decl.end()) ? w : "";
 }

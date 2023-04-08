@@ -8,3 +8,5 @@ tests/test6.txt
 tests/test7.txt
 interpret_lang_cp_1
 interpret_lang_cp_1.cpp
+tests/test3_bad.txt
+tests/test1_bad.txt
