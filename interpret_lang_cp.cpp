@@ -380,9 +380,11 @@ string get_identifier(bool struct_decl) {
         id += buf[tmp_ptr++];
     }
     bool cond1 = !wr_symb && tmp_ptr < buf.size() && service_operators.find(id) == service_operators.end();
+    size_t pos;
+    bool cond2 = (pos = id.find('.')) != id.npos && StructNames.find(id.substr(0, pos)) != StructNames.end();
     if(struct_decl)
-        return cond1 ? id : "";
-    return cond1 && service_decl.find(id) == service_decl.end() ? id : "";
+        return cond1 && !cond2 ? id : "";
+    return cond1 && !cond2 && service_decl.find(id) == service_decl.end() ? id : "";
 }
 string get_mark() {
     string m = get_identifier();
