@@ -200,7 +200,7 @@ unordered_set<char> service_alf {
     '(', ')', '{', '}', '/', '\"', '\\'
 };
 unordered_set<char> ident_stop {
-    ' ', ';', '=', '\n', '\t', ')', '<', '>', '!', '+', '-', '*', ':', ',', '{'
+    ' ', ';', '=', '\n', '\t', ')', '<', '>', '!', '+', '-', '*', ':', ',', '{', '/'
 };
 
 /* Structures for semantic checking and parsing to */
@@ -355,13 +355,15 @@ string get_service_word() {
 string get_service_op() {
     string w;
     size_t tmp_ptr = ptr;
+    bool is_symb = false;
     bool alpha = isalpha(buf[tmp_ptr]);
     while(tmp_ptr < buf.size() && buf[tmp_ptr] != ' ' && buf[tmp_ptr] != '\n' && 
           buf[tmp_ptr] != '(' && buf[tmp_ptr] != '\t' && !isdigit(buf[tmp_ptr]) &&
-          buf[tmp_ptr] != '\"' && 
-          ((alpha && isalpha(buf[tmp_ptr])) || (!alpha && !isalpha(buf[tmp_ptr]))))
-            w += buf[tmp_ptr++];
-        
+          buf[tmp_ptr] != '\"' && !(is_symb && (buf[tmp_ptr] == '+' || buf[tmp_ptr] == '-')) &&
+          ((alpha && isalpha(buf[tmp_ptr])) || (!alpha && !isalpha(buf[tmp_ptr])))) { 
+        w += buf[tmp_ptr++];
+        is_symb = !w.empty();
+    }
     return tmp_ptr < buf.size() && (service_ops.find(w) != service_ops.end()) ? w : "";
 }
 string get_identifier(bool struct_decl) {
@@ -1121,27 +1123,25 @@ error interpret_prn() {
                 else if(it.name == "=") {
                     auto& op1 = prn_stk[prn_stk.size() - 2];
                     op1.val = prn_stk.back().val;
-                    if(op1.name != "const") {
-                        ID_refs[op1.name].val = prn_stk.back().val;
-                        size_t pos;
-                        if(StructNames.find(op1.type) != StructNames.end()) {
-                            auto& lines = get<vector<BaseIdent>>(ID_refs[op1.name].val);
-                            auto& values = get<vector<BaseIdent>>(prn_stk.back().val);
-                            for(size_t i = 0; i < lines.size(); i++) {
-                                string name = op1.name + "." + lines[i].name;
-                                ID_refs[name].val = values[i].val;
+                    ID_refs[op1.name].val = prn_stk.back().val;
+                    size_t pos;
+                    if(StructNames.find(op1.type) != StructNames.end()) {
+                        auto& lines = get<vector<BaseIdent>>(ID_refs[op1.name].val);
+                        auto& values = get<vector<BaseIdent>>(prn_stk.back().val);
+                        for(size_t i = 0; i < lines.size(); i++) {
+                            string name = op1.name + "." + lines[i].name;
+                            ID_refs[name].val = values[i].val;
+                        }
+                    }
+                    else if((pos = op1.name.find('.')) != op1.name.npos) {
+                        string s_name = op1.name.substr(0, pos);
+                        string line = op1.name.substr(pos + 1, op1.name.size() - pos - 1);
+                        auto& lines = get<vector<BaseIdent>>(ID_refs[s_name].val);
+                        for(auto& line_name : lines)
+                            if(line_name.name == line) {
+                                line_name.val = ID_refs[op1.name].val;
+                                break;
                             }
-                        }
-                        else if((pos = op1.name.find('.')) != op1.name.npos) {
-                            string s_name = op1.name.substr(0, pos);
-                            string line = op1.name.substr(pos + 1, op1.name.size() - pos - 1);
-                            auto& lines = get<vector<BaseIdent>>(ID_refs[s_name].val);
-                            for(auto& line_name : lines)
-                                if(line_name.name == line) {
-                                    line_name.val = ID_refs[op1.name].val;
-                                    break;
-                                }
-                        }
                     }
                 }
                 prn_stk.pop_back();

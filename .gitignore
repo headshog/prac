@@ -6,3 +6,5 @@ tests/test5.txt
 interpret_lang_cp_add.cpp
 tests/test6.txt
 tests/test7.txt
+interpret_lang_cp_1
+interpret_lang_cp_1.cpp
