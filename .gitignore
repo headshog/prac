@@ -32,3 +32,9 @@ tests/test21_bad.txt
 tests/test22_bad.txt
 tests/test23.txt
 tests/test24_bad.txt
+tests_interpret_lang.zip
+tests/test25.txt
+tests/test28_bad.txt
+tests/test27_bad.txt
+tests/test26.txt
+tests/test29_bad.txt

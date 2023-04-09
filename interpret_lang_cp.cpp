@@ -34,13 +34,14 @@ enum error {
     WRONG_READ_EXPR = -21,
     WRONG_WRITE_EXPR = -22,
     WRONG_FOR_EXPR = -23,
-    WRONG_EXPR = -24,
-    WRONG_BR_CNT = -25,
-    WRONG_GOTO_IDENT = -26,
-    WRONG_EXPR_OP_TYPES = -27,
-    WRONG_WRITE_EXPR_TYPE = -28,
-    WRONG_DECL_AFTER_SECT = -29,
-    ERROR = -30
+    WRONG_WHILE_EXPR = -24,
+    WRONG_EXPR = -25,
+    WRONG_BR_CNT = -26,
+    WRONG_GOTO_IDENT = -27,
+    WRONG_EXPR_OP_TYPES = -28,
+    WRONG_WRITE_EXPR_TYPE = -29,
+    WRONG_DECL_AFTER_SECT = -30,
+    ERROR = -31
 };
 size_t cnt_lines = 1;
 vector<pair<error, size_t>> err_stk;
@@ -136,7 +137,11 @@ int error_wrapper() {
                 << it.second << endl << endl;
                 break;
             case WRONG_FOR_EXPR:
-                cout << "Wrong expression if for operator on line "
+                cout << "Wrong expression in for operator on line "
+                << it.second << endl << endl;
+                break;
+            case WRONG_WHILE_EXPR:
+                cout << "Wrong expression in while operator on line "
                 << it.second << endl << endl;
                 break;
             case WRONG_EXPR:
@@ -886,7 +891,7 @@ error while_operator() {
     }
     ptr++;
     if(!is_logical_expression(expr_arg))
-        err_stk.push_back({ WRONG_FOR_EXPR, cnt_lines });
+        err_stk.push_back({ WRONG_WHILE_EXPR, cnt_lines });
     if(!is_compatible_types_expr(expr_arg))
         err_stk.push_back({ WRONG_EXPR_OP_TYPES, cnt_lines });
 
@@ -1240,7 +1245,7 @@ error interpret_prn() {
                     else if(op.type == "string")
                         cout << get<string>(op.val);
                     else if(op.type == "boolean")
-                        cout << get<bool>(op.val);
+                        get<bool>(op.val) ? cout << "true" : cout << "false";
                     else if(StructNames.find(op.type) != StructNames.end()) {
                         auto& v = get<vector<BaseIdent>>(op.val);
                         for(auto& s_it : v) {
@@ -1249,7 +1254,8 @@ error interpret_prn() {
                             else if(s_it.type == "string")
                                 cout << s_it.name << ": " << get<string>(s_it.val) << endl;
                             else if(s_it.type == "boolean")
-                                cout << s_it.name << ": " << get<bool>(s_it.val) << endl;
+                                cout << s_it.name << ": "
+                                 << (get<bool>(s_it.val) ? "true" : "false") << endl;
                         }
                     }
                     else {
