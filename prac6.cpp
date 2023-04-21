@@ -10,7 +10,7 @@ int E() {
     c = getchar();
     if(c != 'a' && c != '\n')
         return 1;
-    return c == 'a' ?    c = getchar(); A    c = getchar();() : 0;
+    return c == 'a' ? A() : 0;
 }
 
 int A() {
